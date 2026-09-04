@@ -51,7 +51,23 @@ uv run ruff check .
 uv run pytest
 ```
 
-Commands for downloading, preprocessing, training, evaluation, and export will be added in separate commits.
+Download, verify, and extract the required MovieLens 20M files with:
+
+```bash
+uv run python download_data.py
+```
+
+The downloader verifies the official archive against its published MD5 checksum and extracts only `README.txt`, `links.csv`, `movies.csv`, and `ratings.csv` into `raw_data/ml-20m/`.
+
+If the official GroupLens server reports a certificate problem, the download can be explicitly allowed with:
+
+```bash
+uv run python download_data.py --allow-insecure-download
+```
+
+This flag disables certificate verification only for the archive request. Checksum verification remains mandatory, and a mismatched archive is never extracted. Interrupted downloads resume from the existing `.part` file when the server supports byte ranges.
+
+Commands for preprocessing, training, evaluation, and export will be added in separate commits.
 
 ## Data policy
 
