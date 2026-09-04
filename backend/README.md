@@ -38,7 +38,23 @@ uv run ruff check .
 | `GET /movies/search` | Search catalog titles on the server |
 | `POST /recommend` | Return five recommendations from selected movies |
 
-`GET /movies` serves the complete 13,680-title model catalog from a validated startup cache. Responses are compressed and contain public MovieLens IDs rather than internal factor indexes. `GET /movies/search` accepts `q` and an optional `limit` from 1 to 100. The recommendation endpoint will be added in a separate, tested milestone.
+`GET /movies` serves the complete 13,680-title model catalog from a validated startup cache. Responses are compressed and contain public MovieLens IDs rather than internal factor indexes. `GET /movies/search` accepts `q` and an optional `limit` from 1 to 100.
+
+`POST /recommend` accepts 5 to 50 unique model-supported movies. The first API version requires each selection to carry `rating: 5`, matching the binary positive interactions used during training. It calculates a temporary user factor, excludes all selected movies, and returns exactly five recommendations with model scores and catalog metadata.
+
+Example request:
+
+```json
+{
+  "movies": [
+    {"movieId": 1, "rating": 5},
+    {"movieId": 260, "rating": 5},
+    {"movieId": 318, "rating": 5},
+    {"movieId": 527, "rating": 5},
+    {"movieId": 1196, "rating": 5}
+  ]
+}
+```
 
 ## Configuration
 

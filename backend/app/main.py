@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -11,14 +12,23 @@ from app.api.router import api_router
 from app.config import Settings, get_settings
 from app.services.catalog import CatalogService
 
+for thread_variable in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS"):
+    os.environ.setdefault(thread_variable, "1")
+
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     resolved_settings = settings or get_settings()
 
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
+        from app.services.recommender import RecommenderService
+
         application.state.catalog = CatalogService.load(
             resolved_settings.assets_dir / "catalog.json.gz"
+        )
+        application.state.recommender = RecommenderService.load(
+            resolved_settings.assets_dir / "serving_model.npz",
+            application.state.catalog,
         )
         yield
 

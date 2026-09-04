@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     environment: Literal["development", "test", "production"] = "development"
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5173"])
     assets_dir: Path = Path(__file__).parent / "assets"
+    recommendation_count: int = 5
 
     model_config = SettingsConfigDict(
         env_prefix="FLASHBACK_",

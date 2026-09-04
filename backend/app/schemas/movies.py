@@ -15,3 +15,11 @@ class Movie(BaseModel):
 
 class MoviesResponse(BaseModel):
     movies: tuple[Movie, ...]
+
+
+class Recommendation(Movie):
+    score: float
+
+
+class RecommendationsResponse(BaseModel):
+    recommendations: tuple[Recommendation, ...]

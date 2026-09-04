@@ -4,7 +4,7 @@ from app.config import Settings
 from app.main import create_app
 
 
-def test_health_reports_service_without_loaded_model() -> None:
+def test_health_reports_ready_catalog_and_model() -> None:
     application = create_app(Settings(environment="test"))
 
     with TestClient(application) as client:
@@ -16,7 +16,7 @@ def test_health_reports_service_without_loaded_model() -> None:
         "service": "Flashback API",
         "version": "0.1.0",
         "catalogReady": True,
-        "modelReady": False,
+        "modelReady": True,
     }
 
 
