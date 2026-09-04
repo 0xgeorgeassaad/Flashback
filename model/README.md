@@ -85,6 +85,14 @@ uv run python preprocess.py
 
 Preprocessing repeatedly removes users and movies with fewer than five positive interactions until the dataset is stable. For every retained user, the latest interaction is assigned to the test split, the preceding interaction is assigned to validation, and all earlier interactions are assigned to training. Equal timestamps are ordered by MovieLens movie ID so repeated runs are deterministic. The generated Parquet files and mappings are written to `processed_data/`, while summary statistics are committed in `reports/preprocessing_report.json`.
 
+Evaluate the non-personalized popularity baseline on the validation split with:
+
+```bash
+uv run python evaluate_popularity.py
+```
+
+The evaluator removes movies already present in each user's training history and reports Recall and NDCG at 5, 10, and 20 in `reports/popularity_validation.json`. The test split remains untouched until the ALS configuration has been selected.
+
 ## Data policy
 
 MovieLens data must be downloaded into `model/raw_data/`. That directory is ignored by Git because the dataset should not be redistributed in this repository. Deterministic intermediate files in `model/processed_data/` are also ignored. Download scripts, checksums, preprocessing code, configuration, and evaluation reports will be versioned so the work remains reproducible.
