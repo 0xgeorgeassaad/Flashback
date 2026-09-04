@@ -1,6 +1,6 @@
 # Flashback API
 
-This directory contains the isolated FastAPI application that serves the Flashback frontend. It loads pre-trained recommendation artifacts and never trains the ALS model at runtime.
+This directory contains the isolated FastAPI application that serves the Flashback frontend. It loads pre-trained recommendation artifacts and never trains the ALS model at runtime. Serving uses NumPy to fold a visitor's selected movies into the trained factor space, so the deployed API does not require the native `implicit` or SciPy runtimes.
 
 ## Requirements
 
@@ -72,6 +72,8 @@ uv run fastapi deploy
 ```
 
 The first deployment creates or selects the FastAPI Cloud app and writes local linking information under the ignored `.fastapicloud/` directory. The deployment package excludes tests, enrichment scripts, reports, local environment files, and development caches through `.fastapicloudignore`. It includes all files under `app/`, including the catalog and compact serving model.
+
+Only NumPy is needed for deployed model inference. The ALS model was trained with `implicit`, but the API evaluates the same normal equation directly from the exported item factors. This avoids depending on a system OpenMP library such as `libgomp` in the cloud runtime.
 
 The TMDB token is not required in FastAPI Cloud because poster-path enrichment has already been completed and committed. After the Cloudflare Pages URL is known, configure the exact frontend origin as a JSON list:
 

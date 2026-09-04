@@ -5,10 +5,8 @@ description = "FastAPI service for the Flashback movie recommender"
 requires-python = ">=3.14,<3.15"
 dependencies = [
     "fastapi[standard]>=0.116,<1",
-    "implicit>=0.7.3,<0.8",
     "numpy>=2.0,<3",
     "pydantic-settings>=2.10,<3",
-    "scipy>=1.14,<2",
 ]
 
 [dependency-groups]

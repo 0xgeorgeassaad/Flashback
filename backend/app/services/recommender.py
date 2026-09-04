@@ -4,8 +4,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
-from implicit.cpu.als import AlternatingLeastSquares
-from scipy.sparse import csr_matrix
 
 from app.schemas.movies import Recommendation
 from app.services.catalog import CatalogService
@@ -39,15 +37,10 @@ class RecommenderService:
         self.movie_id_to_index = {
             int(movie_id): movie_index for movie_index, movie_id in enumerate(assets.movie_ids)
         }
-        self.model = AlternatingLeastSquares(
-            factors=assets.factors,
-            regularization=assets.regularization,
-            alpha=assets.alpha,
-            iterations=1,
-            num_threads=1,
+        self.base_normal_equation = (
+            assets.item_factors.T @ assets.item_factors
+            + assets.regularization * np.eye(assets.factors, dtype=np.float32)
         )
-        self.model.item_factors = assets.item_factors
-        _ = self.model.YtY
 
     @classmethod
     def load(cls, path: Path, catalog: CatalogService) -> RecommenderService:
@@ -76,21 +69,19 @@ class RecommenderService:
         selected_indexes = np.array(
             [self.movie_id_to_index[movie_id] for movie_id in movie_ids], dtype=np.int32
         )
-        user_movies = csr_matrix(
-            (
-                np.ones(selected_indexes.size, dtype=np.float32),
-                (np.zeros(selected_indexes.size, dtype=np.int32), selected_indexes),
-            ),
-            shape=(1, self.assets.item_factors.shape[0]),
+        selected_factors = self.assets.item_factors[selected_indexes]
+        normal_equation = self.base_normal_equation + (self.assets.alpha - 1.0) * (
+            selected_factors.T @ selected_factors
         )
-        recommended_indexes, scores = self.model.recommend(
-            0,
-            user_movies,
-            N=count,
-            filter_already_liked_items=True,
-            recalculate_user=True,
-        )
-        if recommended_indexes.size != count or np.any(recommended_indexes < 0):
+        preference_vector = self.assets.alpha * selected_factors.sum(axis=0)
+        user_factor = np.linalg.solve(normal_equation, preference_vector)
+
+        scores = self.assets.item_factors @ user_factor
+        scores[selected_indexes] = -np.inf
+        recommended_indexes = np.argsort(-scores, kind="stable")[:count]
+        recommended_scores = scores[recommended_indexes]
+
+        if recommended_indexes.size != count or np.any(~np.isfinite(recommended_scores)):
             raise RuntimeError("Model returned fewer recommendations than requested")
 
         return tuple(
@@ -98,5 +89,7 @@ class RecommenderService:
                 **self.catalog.entries[int(movie_index)].movie.model_dump(),
                 score=float(score),
             )
-            for movie_index, score in zip(recommended_indexes, scores, strict=True)
+            for movie_index, score in zip(
+                recommended_indexes, recommended_scores, strict=True
+            )
         )

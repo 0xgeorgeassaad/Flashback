@@ -33,6 +33,25 @@ def test_recommender_returns_ranked_unseen_movies(
     )
 
 
+def test_recommender_matches_implicit_als_reference_ranking(
+    recommender: RecommenderService,
+) -> None:
+    recommendations = recommender.recommend([1, 260, 318, 527, 1196], count=10)
+
+    assert [movie.movie_id for movie in recommendations] == [
+        1210,
+        593,
+        356,
+        296,
+        50,
+        110,
+        1198,
+        608,
+        32,
+        457,
+    ]
+
+
 def test_recommender_rejects_unknown_movie(recommender: RecommenderService) -> None:
     with pytest.raises(UnknownMovieError) as error:
         recommender.recommend([1, 260, 318, 527, 999_999], count=5)
