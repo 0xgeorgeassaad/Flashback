@@ -1,0 +1,43 @@
+{
+  "dataset": "MovieLens 20M",
+  "archive_md5": "cd245b17a1ae2cc31bb14903e1204af3",
+  "settings": {
+    "positive_rating_threshold": 4.0,
+    "minimum_user_interactions": 5,
+    "minimum_movie_interactions": 5,
+    "interaction_weight": "binary",
+    "split": "chronological_leave_last_two",
+    "timestamp_tie_breaker": "movieId_ascending"
+  },
+  "input": {
+    "ratings": 20000263,
+    "positive_interactions": 9995410,
+    "positive_users": 138287,
+    "positive_movies": 20720
+  },
+  "core": {
+    "interactions": 9977451,
+    "users": 136674,
+    "movies": 13680
+  },
+  "splits": {
+    "train": {
+      "interactions": 9704103,
+      "users": 136674,
+      "movies": 13680,
+      "interactions_with_training_movie": 9704103
+    },
+    "validation": {
+      "interactions": 136674,
+      "users": 136674,
+      "movies": 7925,
+      "interactions_with_training_movie": 136674
+    },
+    "test": {
+      "interactions": 136674,
+      "users": 136674,
+      "movies": 8393,
+      "interactions_with_training_movie": 136674
+    }
+  }
+}

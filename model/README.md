@@ -77,8 +77,16 @@ uv run python inspect_data.py
 
 The profile records source counts, rating and genre distributions, positive-interaction coverage, and basic data-quality checks in `reports/data_profile.json`.
 
+Build the positive-interaction dataset and chronological splits with:
+
+```bash
+uv run python preprocess.py
+```
+
+Preprocessing repeatedly removes users and movies with fewer than five positive interactions until the dataset is stable. For every retained user, the latest interaction is assigned to the test split, the preceding interaction is assigned to validation, and all earlier interactions are assigned to training. Equal timestamps are ordered by MovieLens movie ID so repeated runs are deterministic. The generated Parquet files and mappings are written to `processed_data/`, while summary statistics are committed in `reports/preprocessing_report.json`.
+
 ## Data policy
 
-MovieLens data must be downloaded into `model/raw_data/`. That directory is ignored by Git because the dataset should not be redistributed in this repository. Download scripts, checksums, preprocessing code, configuration, and evaluation reports will be versioned so the work remains reproducible.
+MovieLens data must be downloaded into `model/raw_data/`. That directory is ignored by Git because the dataset should not be redistributed in this repository. Deterministic intermediate files in `model/processed_data/` are also ignored. Download scripts, checksums, preprocessing code, configuration, and evaluation reports will be versioned so the work remains reproducible.
 
 Generated binary model artifacts belong in `model/artifacts/` and are also ignored. The final export format for backend inference will be decided when backend development begins.
