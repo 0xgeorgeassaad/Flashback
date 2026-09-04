@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
 from pydantic import Field
@@ -12,6 +13,7 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     environment: Literal["development", "test", "production"] = "development"
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5173"])
+    assets_dir: Path = Path(__file__).parent / "assets"
 
     model_config = SettingsConfigDict(
         env_prefix="FLASHBACK_",

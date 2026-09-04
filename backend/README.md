@@ -38,7 +38,7 @@ uv run ruff check .
 | `GET /movies/search` | Search catalog titles on the server |
 | `POST /recommend` | Return five recommendations from selected movies |
 
-The catalog and recommendation endpoints will be added in separate, tested milestones.
+`GET /movies` serves the complete 13,680-title model catalog from a validated startup cache. Responses are compressed and contain public MovieLens IDs rather than internal factor indexes. `GET /movies/search` accepts `q` and an optional `limit` from 1 to 100. The recommendation endpoint will be added in a separate, tested milestone.
 
 ## Configuration
 

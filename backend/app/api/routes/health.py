@@ -10,6 +10,7 @@ class HealthResponse(BaseModel):
     status: Literal["ok"] = "ok"
     service: str
     version: str
+    catalog_ready: bool = Field(serialization_alias="catalogReady")
     model_ready: bool = Field(serialization_alias="modelReady")
 
 
@@ -19,5 +20,6 @@ def health(request: Request) -> HealthResponse:
     return HealthResponse(
         service=settings.app_name,
         version=settings.app_version,
+        catalog_ready=hasattr(request.app.state, "catalog"),
         model_ready=hasattr(request.app.state, "recommender"),
     )

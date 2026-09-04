@@ -15,6 +15,7 @@ def test_health_reports_service_without_loaded_model() -> None:
         "status": "ok",
         "service": "Flashback API",
         "version": "0.1.0",
+        "catalogReady": True,
         "modelReady": False,
     }
 
