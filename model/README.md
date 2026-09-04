@@ -69,6 +69,14 @@ This flag disables certificate verification only for the archive request. Checks
 
 Commands for preprocessing, training, evaluation, and export will be added in separate commits.
 
+Inspect the dataset and regenerate its committed profile with:
+
+```bash
+uv run python inspect_data.py
+```
+
+The profile records source counts, rating and genre distributions, positive-interaction coverage, and basic data-quality checks in `reports/data_profile.json`.
+
 ## Data policy
 
 MovieLens data must be downloaded into `model/raw_data/`. That directory is ignored by Git because the dataset should not be redistributed in this repository. Download scripts, checksums, preprocessing code, configuration, and evaluation reports will be versioned so the work remains reproducible.

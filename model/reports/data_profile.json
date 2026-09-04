@@ -1,0 +1,165 @@
+{
+  "dataset": "MovieLens 20M",
+  "archive_md5": "cd245b17a1ae2cc31bb14903e1204af3",
+  "positive_rating_threshold": 4.0,
+  "records": {
+    "ratings": 20000263,
+    "users": 138493,
+    "movies_in_ratings": 26744,
+    "minimum_rating": 0.5,
+    "maximum_rating": 5.0,
+    "minimum_timestamp": 789652004,
+    "maximum_timestamp": 1427784002,
+    "movie_rows": 27278,
+    "link_rows": 27278
+  },
+  "quality": {
+    "duplicate_user_movie_pairs": 0,
+    "movies_without_release_year": 229,
+    "movies_without_tmdb_id": 252,
+    "movies_without_link_row": 0
+  },
+  "rating_distribution": [
+    {
+      "rating": 0.5,
+      "count": 239125
+    },
+    {
+      "rating": 1.0,
+      "count": 680732
+    },
+    {
+      "rating": 1.5,
+      "count": 279252
+    },
+    {
+      "rating": 2.0,
+      "count": 1430997
+    },
+    {
+      "rating": 2.5,
+      "count": 883398
+    },
+    {
+      "rating": 3.0,
+      "count": 4291193
+    },
+    {
+      "rating": 3.5,
+      "count": 2200156
+    },
+    {
+      "rating": 4.0,
+      "count": 5561926
+    },
+    {
+      "rating": 4.5,
+      "count": 1534824
+    },
+    {
+      "rating": 5.0,
+      "count": 2898660
+    }
+  ],
+  "positive_interactions": {
+    "count": 9995410,
+    "users": 138287,
+    "movies": 20720,
+    "users_with_at_least_5": 136677,
+    "movies_with_at_least_5": 13681,
+    "by_user": {
+      "min": 1,
+      "median": 37.0,
+      "p90": 170.0,
+      "max": 3177
+    },
+    "by_movie": {
+      "min": 1,
+      "median": 15.0,
+      "p90": 791.0,
+      "max": 55807
+    }
+  },
+  "genres": [
+    {
+      "genre": "Drama",
+      "movies": 13344
+    },
+    {
+      "genre": "Comedy",
+      "movies": 8374
+    },
+    {
+      "genre": "Thriller",
+      "movies": 4178
+    },
+    {
+      "genre": "Romance",
+      "movies": 4127
+    },
+    {
+      "genre": "Action",
+      "movies": 3520
+    },
+    {
+      "genre": "Crime",
+      "movies": 2939
+    },
+    {
+      "genre": "Horror",
+      "movies": 2611
+    },
+    {
+      "genre": "Documentary",
+      "movies": 2471
+    },
+    {
+      "genre": "Adventure",
+      "movies": 2329
+    },
+    {
+      "genre": "Sci-Fi",
+      "movies": 1743
+    },
+    {
+      "genre": "Mystery",
+      "movies": 1514
+    },
+    {
+      "genre": "Fantasy",
+      "movies": 1412
+    },
+    {
+      "genre": "War",
+      "movies": 1194
+    },
+    {
+      "genre": "Children",
+      "movies": 1139
+    },
+    {
+      "genre": "Musical",
+      "movies": 1036
+    },
+    {
+      "genre": "Animation",
+      "movies": 1027
+    },
+    {
+      "genre": "Western",
+      "movies": 676
+    },
+    {
+      "genre": "Film-Noir",
+      "movies": 330
+    },
+    {
+      "genre": "(no genres listed)",
+      "movies": 246
+    },
+    {
+      "genre": "IMAX",
+      "movies": 196
+    }
+  ]
+}
