@@ -109,6 +109,14 @@ uv run python train_final.py
 
 This command combines training and validation interactions, trains the selected ALS configuration, compares ALS with popularity on the untouched test split, and writes `reports/final_test.json`. The native model, user mapping, movie mapping, and integrity manifest are written to the ignored `artifacts/final/` directory. Their serving format can be adapted when backend development begins without changing the documented training result.
 
+Export the compact inference assets used by the backend with:
+
+```bash
+uv run python export_backend_assets.py
+```
+
+The serving export contains movie factors, MovieLens-to-model indexes, a popularity fallback order, and a compressed catalog seed. Historical MovieLens user factors and training interactions are not included in the deployed backend.
+
 ## Data policy
 
 MovieLens data must be downloaded into `model/raw_data/`. That directory is ignored by Git because the dataset should not be redistributed in this repository. Deterministic intermediate files in `model/processed_data/` are also ignored. Download scripts, checksums, preprocessing code, configuration, and evaluation reports will be versioned so the work remains reproducible.

@@ -45,3 +45,19 @@ The catalog and recommendation endpoints will be added in separate, tested miles
 Configuration uses environment variables prefixed with `FLASHBACK_`. Copy `.env.example` to `.env` for local overrides. Local `.env` files and FastAPI Cloud deployment state are ignored by Git.
 
 FastAPI Cloud should use `backend` as the monorepo application directory. The configured entrypoint is `app.main:app`.
+
+## One-time poster metadata enrichment
+
+The committed catalog stores TMDB poster paths so runtime requests do not contact the TMDB metadata API. Add the API Read Access Token to the ignored `.env` file:
+
+```env
+TMDB_READ_ACCESS_TOKEN=your_token
+```
+
+Then run:
+
+```bash
+uv run python scripts/enrich_tmdb.py
+```
+
+The script requests movie-details JSON from TMDB, stores only `poster_path`, saves resumable progress in `.cache/`, and updates `app/assets/catalog.json.gz`. It does not download poster images. The frontend builds public image CDN URLs from the stored paths.

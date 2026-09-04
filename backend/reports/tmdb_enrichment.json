@@ -1,0 +1,13 @@
+{
+  "source": "TMDB movie details API",
+  "language": "en-US",
+  "requests_per_second": 20.0,
+  "movies": 13680,
+  "with_tmdb_id": 13643,
+  "without_tmdb_id": 37,
+  "with_poster_path": 13499,
+  "without_poster_path": 144,
+  "unresolved": 0,
+  "request_failures": 0,
+  "failed_tmdb_ids": []
+}

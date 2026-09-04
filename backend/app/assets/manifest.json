@@ -1,0 +1,18 @@
+{
+  "format": "flashback_implicit_item_factors_v1",
+  "movies": 13680,
+  "factors": 128,
+  "source": {
+    "model_sha256": "c0ae76ef1a958e5d2cc4e5cdc696dc2a7300145fd39a46f3dd0a02efc5920b46",
+    "model_movie_mapping_sha256": "ba10a3eea2e047dfef358d84cd444e292e80e04a9dea315dc9330d474a5d35ac"
+  },
+  "files": {
+    "serving_model.npz": "a5e610bf08376ba9913f24bdd0f9202d29b26f21561f02fd4920b11c8c9ad837",
+    "catalog.json.gz": "9ebe55a3a17f9b9af2ca5fdb2142648870421ce35df33328de12c7ab113bf28e"
+  },
+  "catalog_enrichment": {
+    "source": "TMDB movie details API",
+    "with_poster_path": 13499,
+    "without_poster_path": 144
+  }
+}
