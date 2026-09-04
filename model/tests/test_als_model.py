@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+from implicit.cpu.als import AlternatingLeastSquares
 from scipy.sparse import csr_matrix
 
 from als_model import ALSConfig, recommend_in_batches, train_als
@@ -49,3 +50,18 @@ def test_batch_recommendation_validates_arguments() -> None:
 
     with pytest.raises(ValueError, match="count"):
         recommend_in_batches(model, matrix, count=0)
+
+
+def test_als_model_round_trip(tmp_path) -> None:
+    matrix = csr_matrix(np.eye(3, dtype=np.float32))
+    model, _ = train_als(
+        matrix,
+        ALSConfig(name="test", factors=2, regularization=0.1, iterations=1),
+    )
+    artifact = tmp_path / "model.npz"
+
+    model.save(artifact)
+    loaded = AlternatingLeastSquares.load(artifact)
+
+    assert loaded.user_factors.shape == model.user_factors.shape
+    assert loaded.item_factors.shape == model.item_factors.shape

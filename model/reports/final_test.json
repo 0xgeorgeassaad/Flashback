@@ -1,0 +1,52 @@
+{
+  "model": "implicit_als",
+  "configuration": {
+    "name": "als_f128_r010",
+    "factors": 128,
+    "regularization": 0.1,
+    "alpha": 40.0,
+    "iterations": 15,
+    "random_state": 42
+  },
+  "trained_on": "train_and_validation",
+  "training_interactions": 9840777,
+  "evaluated_split": "test",
+  "evaluation_users": 136674,
+  "candidate_movies": 13680,
+  "cutoffs": [
+    5,
+    10,
+    20
+  ],
+  "training_seconds": 198.013,
+  "recommendation_seconds": 19.487,
+  "popularity_baseline": {
+    "recall_at_5": 0.0300642404553902,
+    "ndcg_at_5": 0.019156437150797557,
+    "recall_at_10": 0.0509314134363522,
+    "ndcg_at_10": 0.02587934511640144,
+    "recall_at_20": 0.08417109325841052,
+    "ndcg_at_20": 0.03423730196163947
+  },
+  "metrics": {
+    "recall_at_5": 0.05638234045978021,
+    "ndcg_at_5": 0.0347640329657768,
+    "recall_at_10": 0.09986537307754217,
+    "ndcg_at_10": 0.04871104610985744,
+    "recall_at_20": 0.16842998668364137,
+    "ndcg_at_20": 0.06590323408315436
+  },
+  "improvement_over_popularity_percent": {
+    "recall_at_5": 87.53954733511803,
+    "ndcg_at_5": 81.47441871428288,
+    "recall_at_10": 96.0781496911363,
+    "ndcg_at_10": 88.22364279606926,
+    "recall_at_20": 100.10431154381088,
+    "ndcg_at_20": 92.4895663711889
+  },
+  "artifact": {
+    "directory": "artifacts/final",
+    "format": "implicit_native_npz",
+    "manifest": "manifest.json"
+  }
+}

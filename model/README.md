@@ -101,6 +101,14 @@ uv run python tune_als.py
 
 The sweep uses a fixed seed and compares each model against the popularity baseline on the complete validation split. Trained tuning artifacts are written to the ignored `artifacts/tuning/` directory, and the reproducible configuration and metric summary is written to `reports/als_validation.json`.
 
+Retrain the selected configuration and perform the one-time test evaluation with:
+
+```bash
+uv run python train_final.py
+```
+
+This command combines training and validation interactions, trains the selected ALS configuration, compares ALS with popularity on the untouched test split, and writes `reports/final_test.json`. The native model, user mapping, movie mapping, and integrity manifest are written to the ignored `artifacts/final/` directory. Their serving format can be adapted when backend development begins without changing the documented training result.
+
 ## Data policy
 
 MovieLens data must be downloaded into `model/raw_data/`. That directory is ignored by Git because the dataset should not be redistributed in this repository. Deterministic intermediate files in `model/processed_data/` are also ignored. Download scripts, checksums, preprocessing code, configuration, and evaluation reports will be versioned so the work remains reproducible.
