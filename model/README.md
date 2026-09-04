@@ -93,6 +93,14 @@ uv run python evaluate_popularity.py
 
 The evaluator removes movies already present in each user's training history and reports Recall and NDCG at 5, 10, and 20 in `reports/popularity_validation.json`. The test split remains untouched until the ALS configuration has been selected.
 
+Train and compare the ALS validation configurations with:
+
+```bash
+uv run python tune_als.py
+```
+
+The sweep uses a fixed seed and compares each model against the popularity baseline on the complete validation split. Trained tuning artifacts are written to the ignored `artifacts/tuning/` directory, and the reproducible configuration and metric summary is written to `reports/als_validation.json`.
+
 ## Data policy
 
 MovieLens data must be downloaded into `model/raw_data/`. That directory is ignored by Git because the dataset should not be redistributed in this repository. Deterministic intermediate files in `model/processed_data/` are also ignored. Download scripts, checksums, preprocessing code, configuration, and evaluation reports will be versioned so the work remains reproducible.

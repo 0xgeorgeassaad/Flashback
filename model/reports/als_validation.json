@@ -1,0 +1,98 @@
+{
+  "model": "implicit_als",
+  "package_versions": {
+    "implicit": "0.7.3",
+    "numpy": "2.5.2",
+    "scipy": "1.18.1"
+  },
+  "evaluated_split": "validation",
+  "evaluation_users": 136674,
+  "candidate_movies": 13680,
+  "cutoffs": [
+    5,
+    10,
+    20
+  ],
+  "selection_metric": "ndcg_at_10",
+  "popularity_baseline": {
+    "recall_at_5": 0.03306407948841769,
+    "ndcg_at_5": 0.02086643590041598,
+    "recall_at_10": 0.05565067240294423,
+    "ndcg_at_10": 0.02815437222356938,
+    "recall_at_20": 0.09129022345142455,
+    "ndcg_at_20": 0.037091573087687124
+  },
+  "results": [
+    {
+      "configuration": {
+        "name": "als_f64_r001",
+        "factors": 64,
+        "regularization": 0.01,
+        "alpha": 40.0,
+        "iterations": 15,
+        "random_state": 42
+      },
+      "training_seconds": 29.684,
+      "recommendation_seconds": 3.562,
+      "metrics": {
+        "recall_at_5": 0.054509270234280115,
+        "ndcg_at_5": 0.03331065114187967,
+        "recall_at_10": 0.09735575164259479,
+        "ndcg_at_10": 0.047005095565802464,
+        "recall_at_20": 0.17015672329777426,
+        "ndcg_at_20": 0.06525510893632194
+      },
+      "artifact": "artifacts/tuning/als_f64_r001.npz"
+    },
+    {
+      "configuration": {
+        "name": "als_f64_r010",
+        "factors": 64,
+        "regularization": 0.1,
+        "alpha": 40.0,
+        "iterations": 15,
+        "random_state": 42
+      },
+      "training_seconds": 158.65,
+      "recommendation_seconds": 20.573,
+      "metrics": {
+        "recall_at_5": 0.05462633712337387,
+        "ndcg_at_5": 0.03338052073498228,
+        "recall_at_10": 0.09725331811463775,
+        "ndcg_at_10": 0.04701485833480995,
+        "recall_at_20": 0.17031037358970982,
+        "ndcg_at_20": 0.06534190588221933
+      },
+      "artifact": "artifacts/tuning/als_f64_r010.npz"
+    },
+    {
+      "configuration": {
+        "name": "als_f128_r010",
+        "factors": 128,
+        "regularization": 0.1,
+        "alpha": 40.0,
+        "iterations": 15,
+        "random_state": 42
+      },
+      "training_seconds": 184.218,
+      "recommendation_seconds": 16.98,
+      "metrics": {
+        "recall_at_5": 0.06159913370502071,
+        "ndcg_at_5": 0.03811522033628993,
+        "recall_at_10": 0.10926730760788446,
+        "ndcg_at_10": 0.053384386000800595,
+        "recall_at_20": 0.18320968143172806,
+        "ndcg_at_20": 0.07194575169026299
+      },
+      "artifact": "artifacts/tuning/als_f128_r010.npz"
+    }
+  ],
+  "selected_configuration": {
+    "name": "als_f128_r010",
+    "factors": 128,
+    "regularization": 0.1,
+    "alpha": 40.0,
+    "iterations": 15,
+    "random_state": 42
+  }
+}
