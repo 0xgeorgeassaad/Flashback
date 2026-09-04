@@ -62,6 +62,26 @@ Configuration uses environment variables prefixed with `FLASHBACK_`. Copy `.env.
 
 FastAPI Cloud should use `backend` as the monorepo application directory. The configured entrypoint is `app.main:app`.
 
+## Deploy to FastAPI Cloud
+
+Run deployment commands from this directory so FastAPI Cloud uses the backend `pyproject.toml` and uv lockfile:
+
+```bash
+cd backend
+uv run fastapi deploy
+```
+
+The first deployment creates or selects the FastAPI Cloud app and writes local linking information under the ignored `.fastapicloud/` directory. The deployment package excludes tests, enrichment scripts, reports, local environment files, and development caches through `.fastapicloudignore`. It includes all files under `app/`, including the catalog and compact serving model.
+
+The TMDB token is not required in FastAPI Cloud because poster-path enrichment has already been completed and committed. After the Cloudflare Pages URL is known, configure the exact frontend origin as a JSON list:
+
+```bash
+uv run fastapi cloud env set FLASHBACK_ENVIRONMENT production
+uv run fastapi cloud env set FLASHBACK_CORS_ORIGINS '["https://your-site.pages.dev"]'
+```
+
+Environment changes take effect on the next deployment. Until the production frontend URL is configured, API calls from `http://localhost:5173` remain the only browser origin allowed by default.
+
 ## One-time poster metadata enrichment
 
 The committed catalog stores TMDB poster paths so runtime requests do not contact the TMDB metadata API. Add the API Read Access Token to the ignored `.env` file:
