@@ -1,0 +1,60 @@
+# Flashback model
+
+This directory contains the reproducible training and evaluation pipeline for the Flashback movie recommender.
+
+## Baseline decision
+
+- Dataset: MovieLens 20M
+- Algorithm: implicit-feedback Alternating Least Squares from `implicit`
+- Python: 3.14
+- Environment and lockfile: `uv`
+- Primary metrics: Recall@K and NDCG@K
+- Baseline comparison: most-popular recommender
+
+MovieLens ratings are explicit, but the selected ALS implementation models implicit feedback. The first baseline will treat ratings of 4.0 and above as positive interactions. Lower ratings will not be inserted as positive values. The preprocessing choice will be tested and documented before training.
+
+## Planned pipeline
+
+```text
+raw_data/
+    |
+    v
+inspect and validate
+    |
+    v
+create implicit interactions
+    |
+    v
+chronological train/validation/test split
+    |
+    v
+train popularity and ALS models
+    |
+    v
+evaluate ranking quality
+    |
+    v
+export reproducible artifacts
+```
+
+## Local setup
+
+```bash
+cd model
+uv sync
+```
+
+Run checks with:
+
+```bash
+uv run ruff check .
+uv run pytest
+```
+
+Commands for downloading, preprocessing, training, evaluation, and export will be added in separate commits.
+
+## Data policy
+
+MovieLens data must be downloaded into `model/raw_data/`. That directory is ignored by Git because the dataset should not be redistributed in this repository. Download scripts, checksums, preprocessing code, configuration, and evaluation reports will be versioned so the work remains reproducible.
+
+Generated binary model artifacts belong in `model/artifacts/` and are also ignored. The final export format for backend inference will be decided when backend development begins.
