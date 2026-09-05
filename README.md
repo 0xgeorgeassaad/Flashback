@@ -1,5 +1,17 @@
 # Flashback
 
+## Live deployments
+
+[![Frontend status](https://img.shields.io/website?url=https%3A%2F%2Fflashback-b8q.pages.dev%2F&label=frontend&up_message=online&down_message=offline)](https://flashback-b8q.pages.dev/)
+[![Backend status](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fflashback.fastapicloud.dev%2Fhealth&query=%24.status&label=backend&color=brightgreen)](https://flashback.fastapicloud.dev/health)
+[![Backend deployment](https://github.com/0xgeorgeassaad/Flashback/actions/workflows/deploy-backend.yml/badge.svg?branch=main)](https://github.com/0xgeorgeassaad/Flashback/actions/workflows/deploy-backend.yml)
+
+- Frontend scaffold: [https://flashback-b8q.pages.dev/](https://flashback-b8q.pages.dev/)
+- FastAPI backend: [https://flashback.fastapicloud.dev/](https://flashback.fastapicloud.dev/)
+- API documentation: [https://flashback.fastapicloud.dev/docs](https://flashback.fastapicloud.dev/docs)
+
+> The frontend redeploys automatically after changes are reviewed, merged into `main`, and pushed to the canonical repository.
+
 Flashback is an anonymous movie-recommendation experience. A user discovers movies, builds a taste reel from at least five favorites, receives five recommendations from a ready ALS model, and may save interesting results locally in the browser.
 
 The backend and model are ready and are not part of the project work. The six contributors own the complete React frontend: architecture, components, state, API integration, responsive Tailwind styling, accessibility, and frontend testing.
