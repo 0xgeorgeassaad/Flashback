@@ -1,0 +1,49 @@
+name: Deploy backend
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - ".github/workflows/deploy-backend.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fastapi-cloud-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Test and deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install locked dependencies
+        run: uv sync --locked
+
+      - name: Run lint checks
+        run: uv run --locked ruff check .
+
+      - name: Run backend tests
+        run: uv run --locked pytest
+
+      - name: Deploy to FastAPI Cloud
+        run: uv run --locked fastapi deploy
+        env:
+          FASTAPI_CLOUD_TOKEN: ${{ secrets.FASTAPI_CLOUD_TOKEN }}
+          FASTAPI_CLOUD_APP_ID: ${{ secrets.FASTAPI_CLOUD_APP_ID }}
