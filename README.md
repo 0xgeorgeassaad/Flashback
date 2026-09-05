@@ -22,8 +22,7 @@ The backend and model are ready and are not part of the project work. The six co
 Project/
 ├── frontend/     Contributor-owned React application → Cloudflare Pages
 ├── backend/      Ready FastAPI service, outside the project scope
-├── model/        Ready ALS model and artifacts, outside the project scope
-└── proposal/     Formal project proposal
+└── model/        Ready ALS model and artifacts, outside the project scope
 ```
 
 The provided backend contract is:
