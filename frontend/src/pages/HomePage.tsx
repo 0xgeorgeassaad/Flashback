@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom'
 
 import { HowItWorks } from '../components/home/HowItWorks'
 import { Button, Chip, Dialog, Skeleton } from '../components/ui'
-import { MOVIE_GENRES, STORAGE_KEYS } from '../constants'
-import { useLocalStoragePresence } from '../hooks/useLocalStorage'
+import { MOVIE_GENRES } from '../constants'
 import { posterUrl } from '../lib/posters'
 import { useCatalog } from '../state/CatalogContext'
 import { useTaste } from '../state/TasteContext'
@@ -185,13 +184,7 @@ function PosterMarquee() {
 export function HomePage() {
   const { movies, status, reload } = useCatalog()
   const { selectedMovies } = useTaste()
-
-  const hasStoredTasteDraft = useLocalStoragePresence(
-    STORAGE_KEYS.tasteDraft,
-  )
-
-  const draftExists =
-    selectedMovies.length > 0 || hasStoredTasteDraft
+  const draftExists = selectedMovies.length > 0
 
   const genres = MOVIE_GENRES.slice(0, 8)
 
