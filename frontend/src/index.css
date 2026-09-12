@@ -1,22 +1,41 @@
-@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
-@import 'tailwindcss';
+@import url("https://fonts.googleapis.com/css2?family=Archivo+Black&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap");
 
-/* Contributor 1 owns the shared system; every contributor should reuse these tokens. */
+@import "tailwindcss";
+
+/* Contributor 1 owns the shared visual system.
+   All feature contributors should reuse these tokens and utility classes. */
+
 @theme {
   --color-booth: #0d1024;
+  --color-booth-deep: #080b18;
   --color-reel: #181d3a;
+  --color-reel-raised: #202747;
   --color-screen: #f4f0df;
   --color-haze: #a8b0cf;
+  --color-haze-strong: #d1d6e8;
   --color-marquee: #ffb000;
+  --color-marquee-soft: #ffd56b;
   --color-ticket: #ed5b5f;
   --color-line: #303858;
-  --font-display: 'Archivo Black', Impact, sans-serif;
-  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
-  --font-utility: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --font-display: "Archivo Black", Impact, sans-serif;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-utility: "IBM Plex Mono", ui-monospace, monospace;
+
+  --radius-panel: 1.25rem;
+  --radius-control: 0.75rem;
+
+  --shadow-panel: 0 20px 60px rgb(0 0 0 / 24%);
+  --shadow-glow:
+    0 0 0 1px rgb(255 176 0 / 20%),
+    0 16px 40px rgb(0 0 0 / 28%);
+
+  --ease-archive: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 html {
   color-scheme: dark;
+  scroll-behavior: smooth;
 }
 
 html,
@@ -28,10 +47,20 @@ body,
 body {
   margin: 0;
   background:
-    radial-gradient(circle at 50% -20%, rgb(48 56 88 / 45%), transparent 42rem),
+    radial-gradient(
+      circle at 50% -10%,
+      rgb(48 56 88 / 42%),
+      transparent 38rem
+    ),
+    radial-gradient(
+      circle at 10% 20%,
+      rgb(255 176 0 / 4%),
+      transparent 24rem
+    ),
     var(--color-booth);
   color: var(--color-screen);
   font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
 }
 
 ::selection {
@@ -44,7 +73,76 @@ body {
   outline-offset: 3px;
 }
 
+button,
+a,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+.archive-grid {
+  background-image:
+    linear-gradient(rgb(255 255 255 / 3%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 3%) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.film-perforation {
+  background-image: radial-gradient(
+    circle,
+    rgb(244 240 223 / 50%) 1.25px,
+    transparent 1.5px
+  );
+  background-size: 12px 12px;
+}
+
+.marquee-track {
+  animation: marquee-scroll 28s linear infinite;
+}
+
+.marquee-viewport:hover .marquee-track,
+.marquee-viewport:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+
+.marquee-track.marquee-paused {
+  animation-play-state: paused;
+}
+
+.marquee-track-reverse {
+  animation: marquee-scroll-reverse 34s linear infinite;
+}
+
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes marquee-scroll-reverse {
+  from {
+    transform: translateX(-50%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   *,
   *::before,
   *::after {
@@ -52,5 +150,10 @@ body {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+  }
+
+  .marquee-track,
+  .marquee-track-reverse {
+    animation: none;
   }
 }
