@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useMemo } from 'react';
 import type { Movie, SelectedMoviePayload } from '../types';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-
+import { STORAGE_KEYS } from '../constants';
 interface TasteContextType {
   selectedMovies: Movie[];
   addMovie: (movie: Movie) => void;
@@ -18,10 +18,16 @@ interface TasteContextType {
 const TasteContext = createContext<TasteContextType | undefined>(undefined);
 
 export const TasteProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [selectedMovies, setSelectedMovies] = useLocalStorage<Movie[]>(
-    'flashback_taste_draft',
+  // 1. استخدام STORAGE_KEYS.tasteDraft بدلاً من النص المباشر
+  const [rawSelectedMovies, setSelectedMovies] = useLocalStorage<Movie[]>(
+    STORAGE_KEYS.tasteDraft,
     []
   );
+
+  // 2. ضمان أن البيانات دائماً Array لحماية التطبيق من الكراش (Validation)
+  const selectedMovies = useMemo(() => {
+    return Array.isArray(rawSelectedMovies) ? rawSelectedMovies : [];
+  }, [rawSelectedMovies]);
 
   const [lastRemovedMovie, setLastRemovedMovie] = useState<Movie | null>(null);
 
@@ -61,7 +67,7 @@ export const TasteProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const genreDistribution = useMemo(() => {
     const counts: Record<string, number> = {};
     selectedMovies.forEach((movie) => {
-      movie.genres.forEach((genre) => {
+      movie.genres?.forEach((genre) => {
         counts[genre] = (counts[genre] || 0) + 1;
       });
     });

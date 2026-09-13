@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTaste } from '../../../state/TasteContext';
 import { useNavigate } from 'react-router-dom';
+import { posterUrl } from '../../../lib/posters';
 
 export const SelectedMovieList: React.FC = () => {
   const { selectedMovies, removeMovie } = useTaste();

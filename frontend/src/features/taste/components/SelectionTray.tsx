@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTaste } from '../../../state/TasteContext';
 import { useNavigate } from 'react-router-dom';
+import { posterUrl } from '../../../lib/posters';git add .
 
 export const SelectionTray: React.FC = () => {
   const { selectedMovies, removeMovie, isValidSelection } = useTaste();
@@ -41,7 +42,7 @@ export const SelectionTray: React.FC = () => {
                 >
                   {movie.posterPath ? (
                     <img
-                      src={movie.posterPath}
+                      src={posterUrl(movie.posterPath)}
                       alt={movie.title}
                       className="w-full h-full object-cover"
                       onError={(e) => {
