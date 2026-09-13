@@ -1,3 +1,4 @@
+/* oxlint-disable react/only-export-components */
 import React, { createContext, useContext, useState, useMemo } from 'react';
 import type { Movie, SelectedMoviePayload } from '../types';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -18,13 +19,13 @@ interface TasteContextType {
 const TasteContext = createContext<TasteContextType | undefined>(undefined);
 
 export const TasteProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // 1. استخدام STORAGE_KEYS.tasteDraft بدلاً من النص المباشر
+  // Keep the persisted draft under the shared application storage key.
   const [rawSelectedMovies, setSelectedMovies] = useLocalStorage<Movie[]>(
     STORAGE_KEYS.tasteDraft,
     []
   );
 
-  // 2. ضمان أن البيانات دائماً Array لحماية التطبيق من الكراش (Validation)
+  // Fall back safely if local storage contains an unexpected value.
   const selectedMovies = useMemo(() => {
     return Array.isArray(rawSelectedMovies) ? rawSelectedMovies : [];
   }, [rawSelectedMovies]);

@@ -31,7 +31,7 @@ export const SelectedMovieList: React.FC = () => {
           <div className="h-56 bg-slate-800 relative overflow-hidden">
             {movie.posterPath ? (
               <img
-                src={movie.posterPath}
+                src={posterUrl(movie.posterPath) ?? undefined}
                 alt={movie.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 onError={(e) => {
