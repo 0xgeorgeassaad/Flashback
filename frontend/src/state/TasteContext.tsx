@@ -1,44 +1,112 @@
-/* oxlint-disable react/only-export-components */
-import { createContext, useContext, useMemo, useState } from 'react'
-import type { Movie } from '../types'
-
-type TasteContextValue = {
-  selectedMovies: Movie[]
-  selectedIds: Set<number>
-  toggleMovie: (movie: Movie) => void
-  clearSelection: () => void
+import React, { createContext, useContext, useState, useMemo } from 'react';
+import type { Movie, SelectedMoviePayload } from '../types';
+import { useLocalStorage } from '../hooks/useLocalStorage';
+import { STORAGE_KEYS } from '../constants';
+interface TasteContextType {
+  selectedMovies: Movie[];
+  addMovie: (movie: Movie) => void;
+  removeMovie: (movieId: number) => void;
+  toggleMovie: (movie: Movie) => void;
+  clearSelection: () => void;
+  lastRemovedMovie: Movie | null;
+  undoRemove: () => void;
+  genreDistribution: Record<string, number>;
+  isValidSelection: boolean;
+  recommendationPayload: SelectedMoviePayload[];
 }
 
-const TasteContext = createContext<TasteContextValue | null>(null)
+const TasteContext = createContext<TasteContextType | undefined>(undefined);
 
-export function TasteProvider({ children }: { children: React.ReactNode }) {
-  const [selectedMovies, setSelectedMovies] = useState<Movie[]>([])
+export const TasteProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // 1. استخدام STORAGE_KEYS.tasteDraft بدلاً من النص المباشر
+  const [rawSelectedMovies, setSelectedMovies] = useLocalStorage<Movie[]>(
+    STORAGE_KEYS.tasteDraft,
+    []
+  );
 
-  const selectedIds = useMemo(
-    () => new Set(selectedMovies.map((movie) => movie.movieId)),
-    [selectedMovies],
-  )
+  // 2. ضمان أن البيانات دائماً Array لحماية التطبيق من الكراش (Validation)
+  const selectedMovies = useMemo(() => {
+    return Array.isArray(rawSelectedMovies) ? rawSelectedMovies : [];
+  }, [rawSelectedMovies]);
 
-  function toggleMovie(_movie: Movie) {
-    // TODO [Contributor 4]: add/remove without duplicates, then persist the draft.
-    setSelectedMovies((current) => current)
+  const [lastRemovedMovie, setLastRemovedMovie] = useState<Movie | null>(null);
+
+  const addMovie = (movie: Movie) => {
+    if (!selectedMovies.some((m) => m.movieId === movie.movieId)) {
+      setSelectedMovies([...selectedMovies, movie]);
+    }
+  };
+
+  const removeMovie = (movieId: number) => {
+    const movieToRemove = selectedMovies.find((m) => m.movieId === movieId);
+    if (movieToRemove) {
+      setLastRemovedMovie(movieToRemove);
+      setSelectedMovies(selectedMovies.filter((m) => m.movieId !== movieId));
+    }
+  };
+
+  const toggleMovie = (movie: Movie) => {
+    if (selectedMovies.some((m) => m.movieId === movie.movieId)) {
+      removeMovie(movie.movieId);
+    } else {
+      addMovie(movie);
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedMovies([]);
+  };
+
+  const undoRemove = () => {
+    if (lastRemovedMovie) {
+      addMovie(lastRemovedMovie);
+      setLastRemovedMovie(null);
+    }
+  };
+
+  const genreDistribution = useMemo(() => {
+    const counts: Record<string, number> = {};
+    selectedMovies.forEach((movie) => {
+      movie.genres?.forEach((genre) => {
+        counts[genre] = (counts[genre] || 0) + 1;
+      });
+    });
+    return counts;
+  }, [selectedMovies]);
+
+  const isValidSelection = selectedMovies.length >= 5;
+
+  const recommendationPayload: SelectedMoviePayload[] = useMemo(() => {
+    return selectedMovies.map((movie) => ({
+      movieId: movie.movieId,
+      rating: 5,
+    }));
+  }, [selectedMovies]);
+
+  return (
+    <TasteContext.Provider
+      value={{
+        selectedMovies,
+        addMovie,
+        removeMovie,
+        toggleMovie,
+        clearSelection,
+        lastRemovedMovie,
+        undoRemove,
+        genreDistribution,
+        isValidSelection,
+        recommendationPayload,
+      }}
+    >
+      {children}
+    </TasteContext.Provider>
+  );
+};
+
+export const useTaste = () => {
+  const context = useContext(TasteContext);
+  if (!context) {
+    throw new Error('useTaste must be used within a TasteProvider');
   }
-
-  function clearSelection() {
-    // TODO [Contributor 4]: clear state and the localStorage draft.
-    setSelectedMovies([])
-  }
-
-  const value = useMemo(
-    () => ({ selectedMovies, selectedIds, toggleMovie, clearSelection }),
-    [selectedMovies, selectedIds],
-  )
-
-  return <TasteContext.Provider value={value}>{children}</TasteContext.Provider>
-}
-
-export function useTaste() {
-  const context = useContext(TasteContext)
-  if (!context) throw new Error('useTaste must be used inside TasteProvider')
-  return context
-}
+  return context;
+};

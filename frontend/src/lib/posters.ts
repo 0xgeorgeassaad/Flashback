@@ -1,5 +1,6 @@
 import { TMDB_POSTER_BASE } from '../constants'
 
+
 /**
  * Build a TMDB image CDN URL from a posterPath.
  * No TMDB API key is required; the image host is public.
