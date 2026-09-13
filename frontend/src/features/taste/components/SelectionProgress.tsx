@@ -1,24 +1,27 @@
-import { MIN_SELECTED_MOVIES } from '../../../constants'
-import { useTaste } from '../../../state/TasteContext'
+import React from 'react';
+import { useTaste } from '../../../state/TasteContext';
 
-export function SelectionProgress() {
-  const { selectedMovies } = useTaste()
-  const progress = Math.min(100, (selectedMovies.length / MIN_SELECTED_MOVIES) * 100)
+export const SelectionProgress: React.FC = () => {
+  const { selectedMovies, isValidSelection } = useTaste();
 
   return (
-    <section className="rounded-2xl border border-line bg-reel/70 p-5">
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="text-lg font-semibold text-screen">Your selection</h2>
-        <p className="font-utility text-xs text-marquee">
-          {selectedMovies.length} / {MIN_SELECTED_MOVIES} minimum
+    <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <span className="text-sm font-semibold text-slate-300">
+          Selection Status: {selectedMovies.length} / 5 Minimum
+        </span>
+        <div className="w-full bg-slate-800 h-2 rounded-full mt-2 overflow-hidden max-w-md">
+          <div
+            className="bg-amber-500 h-full transition-all duration-300"
+            style={{ width: `${Math.min((selectedMovies.length / 5) * 100, 100)}%` }}
+          />
+        </div>
+      </div>
+      {!isValidSelection && (
+        <p className="text-xs text-amber-400 bg-amber-500/10 px-3 py-2 rounded border border-amber-500/20">
+          Please select at least {5 - selectedMovies.length} more movie(s) to continue.
         </p>
-      </div>
-      <div className="mt-4 h-2 overflow-hidden rounded-full bg-booth" aria-hidden="true">
-        <div className="h-full bg-marquee" style={{ width: `${progress}%` }} />
-      </div>
-      <p className="mt-3 text-sm text-haze">
-        TODO [Contributor 4]: add contextual instructions for empty, incomplete, and ready states.
-      </p>
-    </section>
-  )
-}
+      )}
+    </div>
+  );
+};
