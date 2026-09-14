@@ -1,38 +1,74 @@
-import { useCatalog } from '../../../state/CatalogContext'
-import { MovieCard } from './MovieCard'
+import type { Movie } from "../../../types";
+import { useCatalog } from "../../../state/CatalogContext";
+import { useTaste } from "../../../state/TasteContext";
+import { Button } from "../../../components/ui/Button";
+import { MovieCard, MovieCardSkeleton } from "./MovieCard";
 
-export function MovieGrid() {
-  const { movies, status, error, reload } = useCatalog()
+type MovieGridProps = {
+  /** Optional override list (e.g. already filtered/paginated by Contributor 2). Defaults to the full catalog. */
+  movies?: Movie[];
+  view?: "grid" | "list";
+};
 
-  if (status === 'error') {
+export function MovieGrid({ movies, view = "grid" }: MovieGridProps) {
+  const { movies: catalogMovies, status, error, reload } = useCatalog();
+  const { selectedMovies, toggleMovie } = useTaste();
+
+  const list = movies ?? catalogMovies;
+  const isSelected = (movieId: number) =>
+    selectedMovies.some((m) => m.movieId === movieId);
+
+  const gridClasses =
+    view === "list"
+      ? "flex flex-col gap-3"
+      : "grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5";
+
+  if (status === "error") {
     return (
       <div className="rounded-2xl border border-ticket/50 bg-ticket/10 p-5 text-sm text-screen">
         <p>{error}</p>
-        <button type="button" onClick={reload} className="mt-3 font-semibold text-marquee">
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={reload}
+          className="mt-3"
+        >
           Try loading again
-        </button>
+        </Button>
       </div>
-    )
+    );
+  }
+
+  if (status === "loading") {
+    return (
+      <div className={gridClasses}>
+        {Array.from({ length: 10 }, (_, index) => (
+          <MovieCardSkeleton key={index} view={view} />
+        ))}
+      </div>
+    );
+  }
+
+  if (list.length === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-line bg-reel/40 p-8 text-center text-sm text-haze">
+        No movies to show here yet.
+      </div>
+    );
   }
 
   return (
-    <section>
-      <div className="mb-4 flex items-end justify-between gap-4">
-        <div>
-          <p className="font-utility text-xs uppercase tracking-[0.18em] text-marquee">Contributor 3</p>
-          <h2 className="mt-2 font-display text-2xl text-screen">Catalog grid</h2>
-        </div>
-        <p className="text-xs text-haze">{status === 'ready' ? `${movies.length} loaded` : 'Loading…'}</p>
-      </div>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        {Array.from({ length: 5 }, (_, index) => (
-          <MovieCard key={index} />
-        ))}
-      </div>
-      <p className="mt-4 text-sm text-haze">
-        TODO [Contributors 2 &amp; 3]: render filtered movies, loading skeletons, pagination/load-more, empty
-        state, and both view modes.
-      </p>
-    </section>
-  )
+    <div className={gridClasses}>
+      {list.map((movie) => (
+        <MovieCard
+          key={movie.movieId}
+          movie={movie}
+          view={view}
+          selected={isSelected(movie.movieId)}
+          onToggle={toggleMovie}
+        />
+      ))}
+    </div>
+  );
 }
