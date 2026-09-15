@@ -1,41 +1,66 @@
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import type { Movie } from '../../../types'
 import { posterUrl } from '../../../lib/posters'
+import { getHighlightSegments } from '../../../utils/highlightMatch'
+import { parseYearFromTitle, titleWithoutYear } from '../../../utils/parseYear'
 import { Button } from '../../../components/ui/Button'
 import { Skeleton } from '../../../components/ui/Skeleton'
 
-type MovieCardProps = {
+export type MovieCardProps = {
   movie: Movie
   selected?: boolean
   onToggle?: (movie: Movie) => void
   view?: 'grid' | 'list'
+  highlightQuery?: string
+  primaryAction?: ReactNode
 }
 
-/** Pull a trailing "(YYYY)" year out of a title, e.g. "Toy Story (1995)". */
-function parseYear(title: string): string | null {
-  const match = title.match(/\((\d{4})\)\s*$/)
-  return match ? match[1] : null
+type ImageLoadState = {
+  source: string | null
+  status: 'loading' | 'loaded' | 'error'
 }
 
-export function MovieCard({ movie, selected = false, onToggle, view = 'grid' }: MovieCardProps) {
-  const [imageState, setImageState] = useState<'loading' | 'loaded' | 'error'>('loading')
+function HighlightedText({ text, query }: { text: string; query: string }) {
+  return getHighlightSegments(text, query).map((segment, index) =>
+    segment.isMatch ? (
+      <mark key={`${segment.text}-${index}`} className="rounded bg-marquee/30 px-0.5 text-inherit">
+        {segment.text}
+      </mark>
+    ) : (
+      <span key={`${segment.text}-${index}`}>{segment.text}</span>
+    ),
+  )
+}
+
+export function MovieCard({
+  movie,
+  selected = false,
+  onToggle,
+  view = 'grid',
+  highlightQuery = '',
+  primaryAction,
+}: MovieCardProps) {
   const src = posterUrl(movie.posterPath)
-  const year = parseYear(movie.title)
+  const [imageState, setImageState] = useState<ImageLoadState>({ source: src, status: 'loading' })
+  const imageStatus = imageState.source === src ? imageState.status : 'loading'
+  const year = parseYearFromTitle(movie.title)
+  const displayTitle = titleWithoutYear(movie.title)
 
   const poster = (
     <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-reel-raised">
-      {src && imageState !== 'error' ? (
+      {src && imageStatus !== 'error' ? (
         <>
-          {imageState === 'loading' && <Skeleton className="absolute inset-0" rounded="sm" />}
+          {imageStatus === 'loading' && <Skeleton className="absolute inset-0" rounded="sm" />}
           <img
             src={src}
             alt=""
             loading="lazy"
-            onLoad={() => setImageState('loaded')}
-            onError={() => setImageState('error')}
+            onLoad={() => setImageState({ source: src, status: 'loaded' })}
+            onError={() => setImageState({ source: src, status: 'error' })}
             className={`h-full w-full object-cover transition-opacity duration-300 ${
-              imageState === 'loaded' ? 'opacity-100' : 'opacity-0'
+              imageStatus === 'loaded' ? 'opacity-100' : 'opacity-0'
             }`}
           />
         </>
@@ -72,9 +97,13 @@ export function MovieCard({ movie, selected = false, onToggle, view = 'grid' }: 
             to={`/movies/${movie.movieId}`}
             className="line-clamp-2 font-display text-sm leading-tight text-screen underline-offset-4 hover:text-marquee hover:underline sm:text-base"
           >
-            {movie.title}
+            <HighlightedText text={displayTitle} query={highlightQuery} />
           </Link>
-          {year && <p className="mt-1 font-utility text-xs text-haze">{year}</p>}
+          {year && (
+            <p className="mt-1 font-utility text-xs text-haze">
+              <HighlightedText text={String(year)} query={highlightQuery} />
+            </p>
+          )}
         </div>
 
         {movie.genres.length > 0 && (
@@ -82,16 +111,20 @@ export function MovieCard({ movie, selected = false, onToggle, view = 'grid' }: 
         )}
 
         <div className="mt-auto flex items-center gap-2 pt-1">
-          <Button
-            type="button"
-            size="sm"
-            variant={selected ? 'secondary' : 'primary'}
-            onClick={() => onToggle?.(movie)}
-            aria-pressed={selected}
-            className="flex-1"
-          >
-            {selected ? 'Remove' : 'Select'}
-          </Button>
+          {primaryAction !== undefined
+            ? primaryAction
+            : onToggle && (
+              <Button
+                type="button"
+                size="sm"
+                variant={selected ? 'secondary' : 'primary'}
+                onClick={() => onToggle(movie)}
+                aria-pressed={selected}
+                className="flex-1"
+              >
+                {selected ? 'Remove' : 'Select'}
+              </Button>
+            )}
           <Link
             to={`/movies/${movie.movieId}`}
             className="inline-flex min-h-9 items-center justify-center rounded-full border border-line px-3 text-xs font-semibold text-haze-strong transition-colors hover:border-haze hover:text-screen"

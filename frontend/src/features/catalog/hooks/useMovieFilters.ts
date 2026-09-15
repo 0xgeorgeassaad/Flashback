@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useCatalog } from '../../../state/CatalogContext'
-import { CATALOG_PAGE_SIZE, MOVIE_GENRES } from '../../../constants'
+import { CATALOG_PAGE_SIZE } from '../../../constants'
 import type { CatalogSort, Movie, MovieFilters, ViewMode } from '../../../types'
 import { parseYearFromTitle, getDecade } from '../../../utils/parseYear'
 
@@ -44,7 +44,7 @@ function filtersToParams(filters: MovieFilters): URLSearchParams {
  * Filtered result contract handed to MovieGrid (Contributor 3) via
  * `results` / `totalCount` / `filters.view`:
  *
- *   results: EnrichedMovie[]   // current page only — Movie & { year, decade },
+ *   results: EnrichedMovie[]   // current page only, Movie & { year, decade },
  *                              // keyed by movieId. Fresh array; the catalog
  *                              // from CatalogContext is never mutated.
  */
@@ -52,7 +52,14 @@ export function useMovieFilters(pageSize: number = CATALOG_PAGE_SIZE) {
   const { movies, status, error, reload } = useCatalog()
   const [searchParams, setSearchParams] = useSearchParams()
   const filters = useMemo(() => parseFiltersFromParams(searchParams), [searchParams])
-  const [visibleCount, setVisibleCount] = useState(pageSize)
+  const paginationKey = JSON.stringify([
+    filters.query,
+    filters.genres,
+    filters.decades,
+    filters.sort,
+  ])
+  const [pagination, setPagination] = useState({ key: paginationKey, count: pageSize })
+  const visibleCount = pagination.key === paginationKey ? pagination.count : pageSize
 
   const updateFilters = useCallback(
     (updates: Partial<MovieFilters>) => {
@@ -114,6 +121,12 @@ export function useMovieFilters(pageSize: number = CATALOG_PAGE_SIZE) {
     return Array.from(set).sort((a, b) => a - b)
   }, [enrichedCatalog])
 
+  const availableGenres = useMemo(() => {
+    const genres = new Set(movies.flatMap((movie) => movie.genres))
+    genres.delete('(no genres listed)')
+    return Array.from(genres).sort((a, b) => a.localeCompare(b))
+  }, [movies])
+
   const filteredResults = useMemo(() => {
     const term = filters.query.trim().toLowerCase()
 
@@ -145,17 +158,19 @@ export function useMovieFilters(pageSize: number = CATALOG_PAGE_SIZE) {
     return sorted
   }, [enrichedCatalog, filters.query, filters.genres, filters.decades, filters.sort])
 
-  useEffect(() => {
-    setVisibleCount(pageSize)
-  }, [filters.query, filters.genres, filters.decades, filters.sort, pageSize])
-
   const totalCount = filteredResults.length
   const paginatedResults = filteredResults.slice(0, visibleCount)
   const hasMore = visibleCount < totalCount
 
   const loadMore = useCallback(() => {
-    setVisibleCount((prev) => Math.min(prev + pageSize, totalCount))
-  }, [pageSize, totalCount])
+    setPagination((current) => {
+      const currentCount = current.key === paginationKey ? current.count : pageSize
+      return {
+        key: paginationKey,
+        count: Math.min(currentCount + pageSize, totalCount),
+      }
+    })
+  }, [pageSize, paginationKey, totalCount])
 
   const activeFilterChips = useMemo<ActiveFilterChip[]>(() => {
     const chips: ActiveFilterChip[] = []
@@ -182,7 +197,7 @@ export function useMovieFilters(pageSize: number = CATALOG_PAGE_SIZE) {
     clearAllFilters,
     activeFilterChips,
 
-    availableGenres: MOVIE_GENRES,
+    availableGenres,
     availableDecades,
 
     results: paginatedResults,

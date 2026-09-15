@@ -18,10 +18,25 @@ export function DiscoverPage() {
         description="Use titles, genres, and decades to find the films that best represent what you enjoy."
       />
 
-      <MovieSearch />
-      <FilterPanel />
+      <MovieSearch
+        value={filters.filters.query}
+        onChange={filters.setQuery}
+        resultCount={filters.totalCount}
+        status={filters.status}
+      />
+      <FilterPanel
+        availableGenres={filters.availableGenres}
+        availableDecades={filters.availableDecades}
+        filters={filters.filters}
+        toggleGenre={filters.toggleGenre}
+        toggleDecade={filters.toggleDecade}
+        setSort={filters.setSort}
+        setView={filters.setView}
+        activeFilterChips={filters.activeFilterChips}
+        clearAllFilters={filters.clearAllFilters}
+      />
 
-      <div aria-live="polite">
+      <div>
         {(filters.status === 'loading' || filters.status === 'idle') && (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5" aria-label="Loading catalog">
             {Array.from({ length: 10 }).map((_, index) => (
@@ -50,7 +65,11 @@ export function DiscoverPage() {
 
         {filters.status === 'ready' && !filters.isEmpty && (
           <>
-            <MovieGrid movies={filters.results} view={filters.filters.view} />
+            <MovieGrid
+              movies={filters.results}
+              view={filters.filters.view}
+              query={filters.filters.query}
+            />
             {filters.hasMore && (
               <div className="mt-6 flex justify-center">
                 <Button variant="secondary" onClick={filters.loadMore}>

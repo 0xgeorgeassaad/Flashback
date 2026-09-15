@@ -7,7 +7,7 @@ export type HighlightSegment = {
  * Splits `text` into segments around case-insensitive occurrences of
  * `query`. Consumers render this array themselves (e.g. wrapping
  * isMatch segments in <mark>), so no HTML string is ever parsed or
- * injected — safe against markup in titles.
+ * injected, which keeps markup in titles safe.
  */
 export function getHighlightSegments(text: string, query: string): HighlightSegment[] {
   const trimmedQuery = query.trim()

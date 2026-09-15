@@ -1,11 +1,11 @@
 import { Button } from '../../../components/ui/Button'
 import { Chip } from '../../../components/ui/Chip'
-import type { CatalogSort } from '../../../types'
-import { useMovieFilters } from '../hooks/useMovieFilters'
+import type { CatalogSort, ViewMode } from '../../../types'
+import type { ActiveFilterChip } from '../hooks/useMovieFilters'
 
 const SORT_LABELS: Record<CatalogSort, string> = {
-  'title-asc': 'Title (A–Z)',
-  'title-desc': 'Title (Z–A)',
+  'title-asc': 'Title (A-Z)',
+  'title-desc': 'Title (Z-A)',
   'year-newest': 'Year (newest first)',
   'year-oldest': 'Year (oldest first)',
 }
@@ -15,23 +15,34 @@ const SORT_OPTIONS = Object.keys(SORT_LABELS) as CatalogSort[]
 const TOGGLE_BUTTON_RESET =
   'rounded-full border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marquee/40 focus-visible:ring-offset-2 focus-visible:ring-offset-booth'
 
-/**
- * Self-contained: reads/writes all filter state via useMovieFilters,
- * which is backed by the URL search params — so it stays in sync with
- * MovieSearch and the results grid without any prop drilling.
- */
-export function FilterPanel() {
-  const {
-    availableGenres,
-    availableDecades,
-    filters,
-    toggleGenre,
-    toggleDecade,
-    setSort,
-    setView,
-    activeFilterChips,
-    clearAllFilters,
-  } = useMovieFilters()
+type FilterPanelProps = {
+  availableGenres: string[]
+  availableDecades: number[]
+  filters: {
+    genres: string[]
+    decades: number[]
+    sort: CatalogSort
+    view: ViewMode
+  }
+  toggleGenre: (genre: string) => void
+  toggleDecade: (decade: number) => void
+  setSort: (sort: CatalogSort) => void
+  setView: (view: ViewMode) => void
+  activeFilterChips: ActiveFilterChip[]
+  clearAllFilters: () => void
+}
+
+export function FilterPanel({
+  availableGenres,
+  availableDecades,
+  filters,
+  toggleGenre,
+  toggleDecade,
+  setSort,
+  setView,
+  activeFilterChips,
+  clearAllFilters,
+}: FilterPanelProps) {
 
   return (
     <div className="flex flex-col gap-5">

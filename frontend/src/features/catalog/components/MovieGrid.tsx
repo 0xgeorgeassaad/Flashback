@@ -1,4 +1,4 @@
-import type { Movie } from '../../../types'
+import type { Movie, ViewMode } from '../../../types'
 import { useCatalog } from '../../../state/CatalogContext'
 import { useTaste } from '../../../state/TasteContext'
 import { CATALOG_PAGE_SIZE } from '../../../constants'
@@ -8,14 +8,15 @@ import { MovieCard, MovieCardSkeleton } from './MovieCard'
 type MovieGridProps = {
   /** Optional override list (e.g. already filtered/paginated by Contributor 2). Defaults to a capped slice of the full catalog. */
   movies?: Movie[]
-  view?: 'grid' | 'list'
+  view?: ViewMode
+  query?: string
 }
 
-export function MovieGrid({ movies, view = 'grid' }: MovieGridProps) {
+export function MovieGrid({ movies, view = 'grid', query = '' }: MovieGridProps) {
   const { movies: catalogMovies, status, error, reload } = useCatalog()
   const { selectedMovies, toggleMovie } = useTaste()
 
-  // Only cap the fallback path — Contributor 2 can still pass a fully filtered/paginated list via `movies`.
+  // Only cap the fallback path. Contributor 2 can pass a filtered and paginated list through `movies`.
   const list = movies ?? catalogMovies.slice(0, CATALOG_PAGE_SIZE)
   const isSelected = (movieId: number) => selectedMovies.some((m) => m.movieId === movieId)
 
@@ -60,6 +61,7 @@ export function MovieGrid({ movies, view = 'grid' }: MovieGridProps) {
           view={view}
           selected={isSelected(movie.movieId)}
           onToggle={toggleMovie}
+          highlightQuery={query}
         />
       ))}
     </div>

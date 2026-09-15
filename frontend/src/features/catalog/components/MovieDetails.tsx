@@ -3,13 +3,14 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useCatalog } from '../../../state/CatalogContext'
 import { useTaste } from '../../../state/TasteContext'
 import { posterUrl } from '../../../lib/posters'
+import { parseYearFromTitle, titleWithoutYear } from '../../../utils/parseYear'
 import { Button } from '../../../components/ui/Button'
 import { Skeleton } from '../../../components/ui/Skeleton'
 import { MovieCard } from './MovieCard'
 
-function parseYear(title: string): string | null {
-  const match = title.match(/\((\d{4})\)\s*$/)
-  return match ? match[1] : null
+type ImageLoadState = {
+  source: string | null
+  status: 'loading' | 'loaded' | 'error'
 }
 
 export function MovieDetails() {
@@ -17,7 +18,7 @@ export function MovieDetails() {
   const navigate = useNavigate()
   const { movies, status } = useCatalog()
   const { selectedMovies, toggleMovie } = useTaste()
-  const [imageState, setImageState] = useState<'loading' | 'loaded' | 'error'>('loading')
+  const [imageState, setImageState] = useState<ImageLoadState>({ source: null, status: 'loading' })
 
   const numericId = Number(movieId)
   const movie = useMemo(() => movies.find((m) => m.movieId === numericId), [movies, numericId])
@@ -57,22 +58,24 @@ export function MovieDetails() {
 
   const selected = selectedMovies.some((m) => m.movieId === movie.movieId)
   const src = posterUrl(movie.posterPath)
-  const year = parseYear(movie.title)
+  const imageStatus = imageState.source === src ? imageState.status : 'loading'
+  const year = parseYearFromTitle(movie.title)
+  const displayTitle = titleWithoutYear(movie.title)
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(15rem,0.75fr)_1.5fr]">
       <div>
         <div className="relative aspect-[2/3] w-full overflow-hidden rounded-2xl bg-reel-raised">
-          {src && imageState !== 'error' ? (
+          {src && imageStatus !== 'error' ? (
             <>
-              {imageState === 'loading' && <Skeleton className="absolute inset-0" rounded="sm" />}
+              {imageStatus === 'loading' && <Skeleton className="absolute inset-0" rounded="sm" />}
               <img
                 src={src}
                 alt=""
-                onLoad={() => setImageState('loaded')}
-                onError={() => setImageState('error')}
+                onLoad={() => setImageState({ source: src, status: 'loaded' })}
+                onError={() => setImageState({ source: src, status: 'error' })}
                 className={`h-full w-full object-cover transition-opacity duration-300 ${
-                  imageState === 'loaded' ? 'opacity-100' : 'opacity-0'
+                  imageStatus === 'loaded' ? 'opacity-100' : 'opacity-0'
                 }`}
               />
             </>
@@ -98,7 +101,7 @@ export function MovieDetails() {
 
       <div className="grid gap-6">
         <div role="status">
-          <h1 className="font-display text-3xl leading-tight text-screen sm:text-4xl">{movie.title}</h1>
+          <h1 className="font-display text-3xl leading-tight text-screen sm:text-4xl">{displayTitle}</h1>
           <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-haze">
             {year && <span className="font-utility text-marquee">{year}</span>}
             {movie.genres.length > 0 && <span>{movie.genres.join(' · ')}</span>}

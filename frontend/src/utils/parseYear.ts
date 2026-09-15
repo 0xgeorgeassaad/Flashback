@@ -23,3 +23,8 @@ export function getDecade(year: number | null): number | null {
   if (year === null || Number.isNaN(year)) return null
   return Math.floor(year / 10) * 10
 }
+
+/** Remove a trailing release year when it is displayed separately. */
+export function titleWithoutYear(title: string): string {
+  return title.replace(/\s*\(\d{4}\)\s*$/, '').trim()
+}
