@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
+import { LibraryProvider } from './features/library/LibraryContext'
 import { CatalogProvider } from './state/CatalogContext'
 import { TasteProvider } from './state/TasteContext'
 import './index.css'
@@ -11,7 +12,9 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <CatalogProvider>
         <TasteProvider>
-          <App />
+          <LibraryProvider>
+            <App />
+          </LibraryProvider>
         </TasteProvider>
       </CatalogProvider>
     </BrowserRouter>

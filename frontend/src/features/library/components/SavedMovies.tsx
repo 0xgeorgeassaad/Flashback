@@ -1,13 +1,16 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Button } from '../../../components/ui/Button'
 import type { SavedMovie } from '../../../types'
 import { MovieCard } from '../../catalog/components/MovieCard'
 
-interface SavedMoviesProps {
+type SavedMoviesProps = {
   movies: SavedMovie[]
   totalSaved: number
   onToggleWatched: (movieId: number) => void
   onRemove: (movieId: number) => SavedMovie | undefined
   onRestore: (movie: SavedMovie) => void
+  onResetFilters: () => void
 }
 
 export function SavedMovies({
@@ -16,116 +19,95 @@ export function SavedMovies({
   onToggleWatched,
   onRemove,
   onRestore,
+  onResetFilters,
 }: SavedMoviesProps) {
-  const [pendingUndo, setPendingUndo] =
-    useState<SavedMovie | null>(null)
+  const [pendingUndo, setPendingUndo] = useState<SavedMovie | null>(null)
+
+  useEffect(() => {
+    if (!pendingUndo) return
+    const timer = window.setTimeout(() => setPendingUndo(null), 6000)
+    return () => window.clearTimeout(timer)
+  }, [pendingUndo])
 
   function handleRemove(movieId: number) {
     const removed = onRemove(movieId)
-
-    if (!removed) return
-
-    setPendingUndo(removed)
-
-    window.setTimeout(() => {
-      setPendingUndo((current) =>
-        current?.movieId === removed.movieId
-          ? null
-          : current,
-      )
-    }, 6000)
+    if (removed) setPendingUndo(removed)
   }
 
   function handleUndo() {
     if (!pendingUndo) return
-
     onRestore(pendingUndo)
     setPendingUndo(null)
   }
 
-  if (totalSaved === 0) {
-    return (
-      <p className="rounded-lg bg-reel p-6 text-center text-haze">
-        You haven&apos;t saved any movies yet.
-        Save titles from your results to build
-        your list here.
-      </p>
-    )
-  }
-
-  if (movies.length === 0) {
-    return (
-      <p className="rounded-lg bg-reel p-6 text-center text-haze">
-        No saved movies match your current search
-        or filter.
-      </p>
-    )
-  }
-
   return (
-    <div>
-      {pendingUndo && (
+    <div className="space-y-4">
+      {pendingUndo ? (
         <div
           role="status"
-          className="mb-4 flex items-center justify-between rounded-md bg-ticket/20 px-4 py-2 text-sm text-screen"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-marquee/35 bg-marquee/10 px-4 py-3 text-sm text-screen"
         >
-          <span>
-            Removed “{pendingUndo.title}”.
-          </span>
-
-          <button
-            type="button"
-            onClick={handleUndo}
-            className="font-semibold text-marquee underline focus:outline-none focus:ring-2 focus:ring-marquee"
-          >
-            Undo
-          </button>
+          <span>Removed “{pendingUndo.title}”.</span>
+          <Button type="button" size="sm" variant="secondary" onClick={handleUndo}>
+            Undo removal
+          </Button>
         </div>
+      ) : null}
+
+      {totalSaved === 0 ? (
+        <div className="archive-grid rounded-panel border border-dashed border-line bg-reel/35 p-8 text-center sm:p-12">
+          <h2 className="font-display text-2xl text-screen">Your list is ready for its first title.</h2>
+          <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-haze">
+            Save a recommendation when a title feels worth returning to. Everything stays in this browser.
+          </p>
+          <Link
+            to="/discover"
+            className="mt-6 inline-flex min-h-11 items-center justify-center rounded-full border border-marquee bg-marquee px-5 text-sm font-semibold text-booth transition-colors hover:border-screen hover:bg-screen"
+          >
+            Discover movies
+          </Link>
+        </div>
+      ) : movies.length === 0 ? (
+        <div className="rounded-panel border border-line bg-reel/45 p-8 text-center">
+          <h2 className="font-display text-xl text-screen">No saved movies match.</h2>
+          <p className="mt-2 text-sm text-haze">Clear the search and status filter to see your full list.</p>
+          <Button type="button" variant="secondary" size="sm" className="mt-5" onClick={onResetFilters}>
+            Reset filters
+          </Button>
+        </div>
+      ) : (
+        <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          {movies.map((entry) => (
+            <li key={entry.movieId}>
+              <MovieCard
+                movie={entry}
+                primaryAction={
+                  <div className="flex flex-1 items-center gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={entry.watched ? 'primary' : 'secondary'}
+                      onClick={() => onToggleWatched(entry.movieId)}
+                      aria-pressed={entry.watched}
+                      className="flex-1"
+                    >
+                      {entry.watched ? 'Watched' : 'Mark watched'}
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => handleRemove(entry.movieId)}
+                      className="min-h-9 rounded-full px-2 text-xs font-semibold text-ticket underline-offset-4 hover:underline"
+                      aria-label={`Remove ${entry.title} from My List`}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                }
+              />
+            </li>
+          ))}
+        </ul>
       )}
-
-      <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {movies.map((entry) => (
-          <li key={entry.movieId}>
-            <MovieCard
-              movie={entry}
-              primaryAction={
-                <div className="flex items-center justify-between gap-2">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      onToggleWatched(
-                        entry.movieId,
-                      )
-                    }
-                    aria-pressed={entry.watched}
-                    className={`rounded-full px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-marquee ${
-                      entry.watched
-                        ? 'bg-marquee text-booth'
-                        : 'bg-booth text-haze'
-                    }`}
-                  >
-                    {entry.watched
-                      ? 'Watched'
-                      : 'Mark watched'}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleRemove(
-                        entry.movieId,
-                      )
-                    }
-                    className="text-xs text-ticket underline focus:outline-none focus:ring-2 focus:ring-marquee"
-                  >
-                    Remove
-                  </button>
-                </div>
-              }
-            />
-          </li>
-        ))}
-      </ul>
     </div>
   )
-} 
+}

@@ -2,7 +2,7 @@ export type Movie = {
   movieId: number
   title: string
   genres: string[]
-  tmdbId?: number
+  tmdbId?: number | null
   posterPath: string | null
 }
 
@@ -50,5 +50,6 @@ export type RecommendationSession = {
   id: string
   createdAt: string
   selectedMovieIds: number[]
+  selectedMovies?: Movie[]
   recommendations: Recommendation[]
 }

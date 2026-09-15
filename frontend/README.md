@@ -1,17 +1,27 @@
 # Flashback frontend
 
-This directory is the six-contributor React, TypeScript, Tailwind, and React Router project.
+This directory contains the completed React, TypeScript, Tailwind, and React Router website for Flashback.
 
-Start it with:
+## Run locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-The starter intentionally renders labeled TODO panels. They establish routes, ownership boundaries, shared types, and the visual direction without implementing the assessed feature behavior.
+The frontend uses [https://flashback.fastapicloud.dev](https://flashback.fastapicloud.dev) by default. To use a locally running backend, set `VITE_API_URL=http://localhost:8000` in a local `.env` file.
 
-Primary ownership:
+## Validate changes
+
+```bash
+npm run lint
+npm test
+npm run build
+```
+
+The test suite covers catalog and recommendation API failures, catalog filtering and pagination, taste selection persistence, and library storage recovery.
+
+## Feature ownership
 
 | Contributor | Feature area |
 |---|---|
@@ -22,4 +32,4 @@ Primary ownership:
 | 5 | Recommendation API request states and Results |
 | 6 | Saved movies, My List, and local recommendation history |
 
-See the [root README](../README.md) for the complete route map, file tree, per-contributor checklist, shared integration tasks, and definition of done.
+See the [root README](../README.md) for the deployed website, complete route map, contributor checklist, and project architecture.

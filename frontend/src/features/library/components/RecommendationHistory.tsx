@@ -1,153 +1,167 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { Button } from '../../../components/ui/Button'
 import type { RecommendationSession } from '../../../types'
 
-interface RecommendationHistoryProps {
+type RecommendationHistoryProps = {
   sessions: RecommendationSession[]
-  onReopen: (
-    session: RecommendationSession,
-  ) => void
+  onReopen: (session: RecommendationSession) => void
   onRemove: (sessionId: string) => void
-  onRestore: (
-    session: RecommendationSession,
-  ) => void
+  onRestore: (session: RecommendationSession) => void
+  availableMovieIds: ReadonlySet<number>
+  catalogReady: boolean
 }
 
-const THIRTY_DAYS_MS =
-  1000 * 60 * 60 * 24 * 30
+type SessionGroup = {
+  label: string
+  sessions: RecommendationSession[]
+}
 
 export function RecommendationHistory({
   sessions,
   onReopen,
   onRemove,
   onRestore,
+  availableMovieIds,
+  catalogReady,
 }: RecommendationHistoryProps) {
-  const [currentTime] = useState(() => Date.now())
-  const [pendingUndo, setPendingUndo] =
-    useState<RecommendationSession | null>(
-      null,
-    )
+  const [pendingUndo, setPendingUndo] = useState<RecommendationSession | null>(null)
+  const groups = useMemo(() => groupSessions(sessions), [sessions])
 
-  function handleRemove(
-    session: RecommendationSession,
-  ) {
+  useEffect(() => {
+    if (!pendingUndo) return
+    const timer = window.setTimeout(() => setPendingUndo(null), 6000)
+    return () => window.clearTimeout(timer)
+  }, [pendingUndo])
+
+  function handleRemove(session: RecommendationSession) {
     onRemove(session.id)
     setPendingUndo(session)
-
-    window.setTimeout(() => {
-      setPendingUndo((current) =>
-        current?.id === session.id
-          ? null
-          : current,
-      )
-    }, 6000)
   }
 
   function handleUndo() {
     if (!pendingUndo) return
-
     onRestore(pendingUndo)
     setPendingUndo(null)
   }
 
-  function isStale(
-  session: RecommendationSession,
-) {
   return (
-    currentTime -
-      new Date(session.createdAt).getTime() >
-    THIRTY_DAYS_MS
+    <div className="space-y-5">
+      {pendingUndo ? (
+        <div
+          role="status"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-marquee/35 bg-marquee/10 px-4 py-3 text-sm text-screen"
+        >
+          <span>Removed one recommendation reel.</span>
+          <Button type="button" size="sm" variant="secondary" onClick={handleUndo}>
+            Undo removal
+          </Button>
+        </div>
+      ) : null}
+
+      {sessions.length === 0 ? (
+        <div className="archive-grid rounded-panel border border-dashed border-line bg-reel/35 p-8 text-center sm:p-12">
+          <h2 className="font-display text-2xl text-screen">No recommendation reels yet.</h2>
+          <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-haze">
+            Completed recommendation sets are stored here automatically so you can reopen them later in this browser.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-7">
+          {groups.map((group) => (
+            <section key={group.label} aria-labelledby={`history-${slugify(group.label)}`}>
+              <h2
+                id={`history-${slugify(group.label)}`}
+                className="font-utility text-xs uppercase tracking-[0.16em] text-haze"
+              >
+                {group.label}
+              </h2>
+              <ul className="mt-3 space-y-3">
+                {group.sessions.map((session) => {
+                  const unavailableCount = catalogReady
+                    ? countUnavailableEntries(session, availableMovieIds)
+                    : 0
+                  return (
+                    <li key={session.id} className="rounded-panel border border-line bg-reel/60 p-5">
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-semibold text-screen">
+                              {session.recommendations[0]?.title ?? 'Saved recommendation reel'}
+                            </p>
+                            <span className="rounded-full border border-line bg-booth px-2 py-0.5 font-utility text-[0.65rem] uppercase tracking-wide text-haze">
+                              {session.recommendations.length} results
+                            </span>
+                          </div>
+                          <p className="mt-2 text-xs leading-5 text-haze">
+                            Based on {session.selectedMovieIds.length} selected movies, saved at{' '}
+                            {new Date(session.createdAt).toLocaleTimeString([], {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                            })}
+                          </p>
+                          {unavailableCount > 0 ? (
+                            <p className="mt-2 text-xs text-ticket">
+                              {unavailableCount} {unavailableCount === 1 ? 'catalog entry is' : 'catalog entries are'} no longer available. The saved result can still be reopened.
+                            </p>
+                          ) : null}
+                        </div>
+
+                        <div className="flex shrink-0 gap-2">
+                          <Button type="button" size="sm" onClick={() => onReopen(session)}>
+                            Reopen reel
+                          </Button>
+                          <Button type="button" size="sm" variant="danger" onClick={() => handleRemove(session)}>
+                            Remove
+                          </Button>
+                        </div>
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
+            </section>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
-  if (sessions.length === 0) {
-    return (
-      <p className="rounded-lg bg-reel p-6 text-center text-haze">
-        No recommendation sessions saved yet.
-        Completed reels will show up here.
-      </p>
-    )
+function groupSessions(sessions: RecommendationSession[]): SessionGroup[] {
+  const sorted = [...sessions].sort((first, second) => Date.parse(second.createdAt) - Date.parse(first.createdAt))
+  const groups = new Map<string, RecommendationSession[]>()
+
+  for (const session of sorted) {
+    const label = dateLabel(session.createdAt)
+    groups.set(label, [...(groups.get(label) ?? []), session])
   }
 
-  return (
-    <div>
-      {pendingUndo && (
-        <div
-          role="status"
-          className="mb-4 flex items-center justify-between rounded-md bg-ticket/20 px-4 py-2 text-sm text-screen"
-        >
-          <span>
-            Removed a saved session.
-          </span>
+  return [...groups].map(([label, groupedSessions]) => ({ label, sessions: groupedSessions }))
+}
 
-          <button
-            type="button"
-            onClick={handleUndo}
-            className="font-semibold text-marquee underline focus:outline-none focus:ring-2 focus:ring-marquee"
-          >
-            Undo
-          </button>
-        </div>
-      )}
+function dateLabel(dateValue: string) {
+  const date = new Date(dateValue)
+  const today = new Date()
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  const startOfDate = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  const dayDifference = Math.round((startOfToday.getTime() - startOfDate.getTime()) / 86_400_000)
 
-      <ul className="flex flex-col gap-3">
-        {sessions.map((session) => (
-          <li
-            key={session.id}
-            className="rounded-lg bg-reel p-4"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <p className="text-sm font-medium text-screen">
-                  {new Date(
-                    session.createdAt,
-                  ).toLocaleDateString()}{' '}
-                  ·{' '}
-                  {
-                    session.recommendations
-                      .length
-                  }{' '}
-                  results
-                </p>
+  if (dayDifference === 0) return 'Today'
+  if (dayDifference === 1) return 'Yesterday'
+  return date.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' })
+}
 
-                <p className="text-xs text-haze">
-                  Based on{' '}
-                  {
-                    session
-                      .selectedMovieIds
-                      .length
-                  }{' '}
-                  selected movies
-                  {isStale(session)
-                    ? ' · older session'
-                    : ''}
-                </p>
-              </div>
+function countUnavailableEntries(
+  session: RecommendationSession,
+  availableMovieIds: ReadonlySet<number>,
+) {
+  const sessionIds = new Set([
+    ...session.selectedMovieIds,
+    ...session.recommendations.map((movie) => movie.movieId),
+  ])
+  return [...sessionIds].filter((movieId) => !availableMovieIds.has(movieId)).length
+}
 
-              <div className="flex gap-3 text-sm">
-                <button
-                  type="button"
-                  onClick={() =>
-                    onReopen(session)
-                  }
-                  className="font-semibold text-marquee underline focus:outline-none focus:ring-2 focus:ring-marquee"
-                >
-                  Reopen
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleRemove(session)
-                  }
-                  className="text-ticket underline focus:outline-none focus:ring-2 focus:ring-marquee"
-                >
-                  Remove
-                </button>
-              </div>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
-} 
+function slugify(value: string) {
+  return value.toLocaleLowerCase().replaceAll(/[^a-z0-9]+/g, '-')
+}

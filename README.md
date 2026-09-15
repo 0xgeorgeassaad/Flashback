@@ -1,16 +1,17 @@
 # Flashback
 
+Website URL: [https://flashback-b8q.pages.dev/](https://flashback-b8q.pages.dev/)
+
+> The website redeploys automatically after changes are reviewed, merged into `main`, and pushed to the canonical repository.
+
 ## Live deployments
 
 [![Frontend status](https://img.shields.io/website?url=https%3A%2F%2Fflashback-b8q.pages.dev%2F&label=frontend&up_message=online&down_message=offline)](https://flashback-b8q.pages.dev/)
 [![Backend status](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fflashback.fastapicloud.dev%2Fhealth&query=%24.status&label=backend&color=brightgreen)](https://flashback.fastapicloud.dev/health)
 [![Backend deployment](https://github.com/0xgeorgeassaad/Flashback/actions/workflows/deploy-backend.yml/badge.svg?branch=main)](https://github.com/0xgeorgeassaad/Flashback/actions/workflows/deploy-backend.yml)
 
-- Frontend scaffold: [https://flashback-b8q.pages.dev/](https://flashback-b8q.pages.dev/)
 - FastAPI backend: [https://flashback.fastapicloud.dev/](https://flashback.fastapicloud.dev/)
 - API documentation: [https://flashback.fastapicloud.dev/docs](https://flashback.fastapicloud.dev/docs)
-
-> The frontend redeploys automatically after changes are reviewed, merged into `main`, and pushed to the canonical repository.
 
 Flashback is an anonymous movie-recommendation experience. A user discovers movies, builds a taste reel from at least five favorites, receives five recommendations from a ready ALS model, and may save interesting results locally in the browser.
 
@@ -82,6 +83,7 @@ Useful commands:
 | `npm run dev` | Start Vite development mode |
 | `npm run build` | Type-check and build production assets |
 | `npm run lint` | Run the configured linter |
+| `npm test` | Run the frontend unit and component tests |
 | `npm run preview` | Preview the production build |
 
 The frontend uses the deployed FastAPI service by default:
@@ -92,18 +94,18 @@ VITE_API_URL=https://flashback.fastapicloud.dev
 
 The variable is optional because the deployed URL is also the API client's fallback. Set it to `http://localhost:8000` only when running the backend locally. Poster images are built from `posterPath` by `src/lib/posters.ts`; no TMDB API key is required.
 
-### Test the frontend with the deployed backend
+### Test the website with the deployed backend
 
-The catalog connection can be tested before any feature TODO is complete:
+Run the completed frontend locally against the deployed API:
 
 ```bash
 cd frontend
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173). A successful connection changes the footer from `Catalog: loading` to `13680 titles in this catalog`. This verifies the frontend build, live API URL, browser CORS permission, JSON response shape, catalog provider, and rendered React state without completing the discovery or recommendation interfaces.
+Open [http://localhost:5173](http://localhost:5173). A successful connection changes the footer from `Catalog: loading` to `13680 titles in this catalog`. This verifies the frontend build, live API URL, browser CORS permission, JSON response shape, catalog provider, and rendered React state.
 
-The recommendation endpoint can be tested independently through `/docs`, Postman, or `curl` until Contributor 5 completes the frontend request flow. This keeps the assessed TODO intact while allowing the backend contract to be verified.
+The recommendation endpoint can also be tested independently through `/docs`, Postman, or `curl` when verifying the backend contract.
 
 ### Automatic FastAPI Cloud deployment
 
@@ -289,8 +291,13 @@ frontend/src/
 │   │   ├── Footer.tsx
 │   │   └── Navbar.tsx
 │   └── ui/
+│       ├── Button.tsx
+│       ├── Chip.tsx
+│       ├── Dialog.tsx
+│       ├── IconButton.tsx
 │       ├── PageIntro.tsx
-│       └── TodoPanel.tsx
+│       ├── Skeleton.tsx
+│       └── Toast.tsx
 ├── features/
 │   ├── catalog/
 │   │   ├── components/
@@ -312,6 +319,7 @@ frontend/src/
 │   │   │   └── RecommendationHero.tsx
 │   │   └── useRecommendations.ts
 │   └── library/
+│       ├── LibraryContext.tsx
 │       ├── components/
 │       │   ├── LibraryToolbar.tsx
 │       │   ├── RecommendationHistory.tsx
@@ -319,6 +327,9 @@ frontend/src/
 │       └── useLibrary.ts
 ├── hooks/
 │   └── useLocalStorage.ts
+├── lib/
+│   ├── guards.ts
+│   └── posters.ts
 ├── pages/
 │   ├── DiscoverPage.tsx
 │   ├── HomePage.tsx
@@ -366,142 +377,142 @@ Every feature must include:
 
 Owned areas: `components/layout`, `components/home`, shared `components/ui`, `HomePage`, `NotFoundPage`, and `index.css`.
 
-- [ ] Refine the shared color, typography, spacing, border, shadow, and motion tokens.
-- [ ] Build reusable `Button`, `IconButton`, `Chip`, `Dialog`, `Toast`, and `Skeleton` primitives.
-- [ ] Complete the responsive navigation and accessible mobile menu.
-- [ ] Complete the footer, including meaningful catalog/service status.
-- [ ] Build the poster-marquee/contact-sheet hero from provided catalog data.
-- [ ] Finish the “How it works” section and genre entry shortcuts.
-- [ ] Show “Continue your reel” only when a saved draft exists.
-- [ ] Ensure app-shell focus order and skip navigation are accessible.
-- [ ] Complete the 404 page and unknown-route focus behavior.
-- [ ] Document shared component props so the other five contributors can reuse them.
+- [x] Refine the shared color, typography, spacing, border, shadow, and motion tokens.
+- [x] Build reusable `Button`, `IconButton`, `Chip`, `Dialog`, `Toast`, and `Skeleton` primitives.
+- [x] Complete the responsive navigation and accessible mobile menu.
+- [x] Complete the footer, including meaningful catalog/service status.
+- [x] Build the poster-marquee/contact-sheet hero from provided catalog data.
+- [x] Finish the “How it works” section and genre entry shortcuts.
+- [x] Show “Continue your reel” only when a saved draft exists.
+- [x] Ensure app-shell focus order and skip navigation are accessible.
+- [x] Complete the 404 page and unknown-route focus behavior.
+- [x] Document shared component props so the other five contributors can reuse them.
 
 Acceptance criteria:
 
-- [ ] Shared primitives visually and behaviorally match across every route.
-- [ ] Navigation works at all breakpoints and without a mouse.
-- [ ] The landing page clearly explains and begins the recommendation journey.
+- [x] Shared primitives visually and behaviorally match across every route.
+- [x] Navigation works at all breakpoints and without a mouse.
+- [x] The landing page clearly explains and begins the recommendation journey.
 
 ### Contributor 2: Discovery, filtering, and catalog controls
 
 Owned areas: `MovieSearch`, `FilterPanel`, `useMovieFilters`, and the control portion of `DiscoverPage`.
 
-- [ ] Implement controlled, case-insensitive local title search.
-- [ ] Highlight the matching text without injecting unsafe HTML.
-- [ ] Add multi-select genre filters and active-filter chips.
-- [ ] Parse years from titles and provide decade filters.
-- [ ] Implement title and year sorting without mutating catalog state.
-- [ ] Implement grid/list view controls.
-- [ ] Synchronize filters with URL search parameters.
-- [ ] Add clear-one and clear-all filter actions.
-- [ ] Implement client-side pagination or “Load more” using `CATALOG_PAGE_SIZE`.
-- [ ] Design loading, zero-results, and reset-filter states.
-- [ ] Coordinate the filtered result contract with Contributor 3.
+- [x] Implement controlled, case-insensitive local title search.
+- [x] Highlight the matching text without injecting unsafe HTML.
+- [x] Add multi-select genre filters and active-filter chips.
+- [x] Parse years from titles and provide decade filters.
+- [x] Implement title and year sorting without mutating catalog state.
+- [x] Implement grid/list view controls.
+- [x] Synchronize filters with URL search parameters.
+- [x] Add clear-one and clear-all filter actions.
+- [x] Implement client-side pagination or “Load more” using `CATALOG_PAGE_SIZE`.
+- [x] Design loading, zero-results, and reset-filter states.
+- [x] Coordinate the filtered result contract with Contributor 3.
 
 Acceptance criteria:
 
-- [ ] Combined filters, sorting, and pagination produce deterministic results.
-- [ ] Refreshing or sharing a Discover URL restores its filter state.
-- [ ] All controls remain usable on narrow mobile screens and by keyboard.
+- [x] Combined filters, sorting, and pagination produce deterministic results.
+- [x] Refreshing or sharing a Discover URL restores its filter state.
+- [x] All controls remain usable on narrow mobile screens and by keyboard.
 
 ### Contributor 3: Movie presentation, grid, and details
 
 Owned areas: `MovieCard`, `MovieGrid`, `MovieDetails`, and `MovieDetailsPage`.
 
-- [ ] Build poster-first cards for grid and list modes.
-- [ ] Use `posterUrl()` and handle null URLs plus image load failures.
-- [ ] Show title, parsed year, genres, and selected/unselected state.
-- [ ] Add accessible Select/Remove and Details interactions.
-- [ ] Avoid nested interactive controls and ambiguous card click behavior.
-- [ ] Build responsive catalog layouts with stable poster aspect ratios.
-- [ ] Add catalog loading skeletons and a useful catalog failure/retry state.
-- [ ] Render the filtered/paginated result supplied by Contributor 2.
-- [ ] Resolve `movieId` on the details route and handle unknown IDs.
-- [ ] Build details actions that share selection state with Contributor 4.
-- [ ] Calculate a simple related-movies section using shared genres.
+- [x] Build poster-first cards for grid and list modes.
+- [x] Use `posterUrl()` and handle null URLs plus image load failures.
+- [x] Show title, parsed year, genres, and selected/unselected state.
+- [x] Add accessible Select/Remove and Details interactions.
+- [x] Avoid nested interactive controls and ambiguous card click behavior.
+- [x] Build responsive catalog layouts with stable poster aspect ratios.
+- [x] Add catalog loading skeletons and a useful catalog failure/retry state.
+- [x] Render the filtered/paginated result supplied by Contributor 2.
+- [x] Resolve `movieId` on the details route and handle unknown IDs.
+- [x] Build details actions that share selection state with Contributor 4.
+- [x] Calculate a simple related-movies section using shared genres.
 
 Acceptance criteria:
 
-- [ ] A card behaves consistently in Discover, Results, Details, and My List.
-- [ ] Missing/broken posters never break layout.
-- [ ] Detail URLs work directly after a browser refresh.
+- [x] A card behaves consistently in Discover, Results, Details, and My List.
+- [x] Missing/broken posters never break layout.
+- [x] Detail URLs work directly after a browser refresh.
 
 ### Contributor 4: Taste Builder and selection state
 
 Owned areas: `TasteContext`, `useLocalStorage` for draft selection, all `features/taste` components, and `TasteBuilderPage`.
 
-- [ ] Implement add/remove/toggle selection without duplicates.
-- [ ] Hydrate and persist the current selection using `STORAGE_KEYS.tasteDraft`.
-- [ ] Recover safely from malformed or stale local data.
-- [ ] Complete the film-strip selection tray and mobile collapsed state.
-- [ ] Implement selected poster thumbnails and individual remove actions.
-- [ ] Build the progress display for the five-movie minimum.
-- [ ] Build the full selected-movie review grid.
-- [ ] Add removal undo and sensible focus restoration.
-- [ ] Calculate a factual genre-distribution taste summary.
-- [ ] Disable recommendation submission until at least five movies are selected.
-- [ ] Integrate Contributor 5's recommendation request and navigate on success.
-- [ ] Preserve selections after failed requests so users can retry.
+- [x] Implement add/remove/toggle selection without duplicates.
+- [x] Hydrate and persist the current selection using `STORAGE_KEYS.tasteDraft`.
+- [x] Recover safely from malformed or stale local data.
+- [x] Complete the film-strip selection tray and mobile collapsed state.
+- [x] Implement selected poster thumbnails and individual remove actions.
+- [x] Build the progress display for the five-movie minimum.
+- [x] Build the full selected-movie review grid.
+- [x] Add removal undo and sensible focus restoration.
+- [x] Calculate a factual genre-distribution taste summary.
+- [x] Disable recommendation submission until at least five movies are selected.
+- [x] Integrate Contributor 5's recommendation request and navigate on success.
+- [x] Preserve selections after failed requests so users can retry.
 
 Acceptance criteria:
 
-- [ ] Selection state remains consistent across Discover, Details, Taste Builder, and refreshes.
-- [ ] The request payload contains unique `{ movieId, rating: 5 }` entries.
-- [ ] Validation explains how the user can proceed rather than only reporting an error.
+- [x] Selection state remains consistent across Discover, Details, Taste Builder, and refreshes.
+- [x] The request payload contains unique `{ movieId, rating: 5 }` entries.
+- [x] Validation explains how the user can proceed rather than only reporting an error.
 
 ### Contributor 5: Recommendation request and Results
 
 Owned areas: the recommendation portion of `api/client.ts`, `features/recommendations`, and `ResultsPage`.
 
-- [ ] Finish the real `POST /recommend` request and non-OK response handling.
-- [ ] Implement recommendation loading, success, failure, retry, and reset state.
-- [ ] Design a skeleton that preserves the final results layout.
-- [ ] Feature the first result as the top pick and rank the remaining four.
-- [ ] Reuse Contributor 3's cards rather than creating incompatible result cards.
-- [ ] Display scores without calling them probabilities or percentages.
-- [ ] Calculate factual genre overlap between selections and recommendations.
-- [ ] Provide Refine and Start another reel actions with clearly different behavior.
-- [ ] Connect result Save actions and completed sessions to Contributor 6's library API.
+- [x] Finish the real `POST /recommend` request and non-OK response handling.
+- [x] Implement recommendation loading, success, failure, retry, and reset state.
+- [x] Design a skeleton that preserves the final results layout.
+- [x] Feature the first result as the top pick and rank the remaining four.
+- [x] Reuse Contributor 3's cards rather than creating incompatible result cards.
+- [x] Display scores without calling them probabilities or percentages.
+- [x] Calculate factual genre overlap between selections and recommendations.
+- [x] Provide Refine and Start another reel actions with clearly different behavior.
+- [x] Connect result Save actions and completed sessions to Contributor 6's library API.
 
 Acceptance criteria:
 
-- [ ] Exactly five normal recommendations render from the real API.
-- [ ] Failed requests are retryable and do not erase the taste reel.
-- [ ] Results pass saved movies and completed sessions through the agreed library contract.
+- [x] Exactly five normal recommendations render from the real API.
+- [x] Failed requests are retryable and do not erase the taste reel.
+- [x] Results pass saved movies and completed sessions through the agreed library contract.
 
 ### Contributor 6: Saved movies and local history
 
 Owned areas: `useLocalStorage` for library data, `features/library`, and `MyListPage`.
 
-- [ ] Save/remove movies locally and mark them watched/unwatched.
-- [ ] Persist completed recommendation sessions locally with timestamps.
-- [ ] Implement My List search, filter, sorting, empty states, and removal undo.
-- [ ] Implement session reopen/remove behavior and stale-entry handling.
-- [ ] Clearly state that saved content exists only in the current browser.
-- [ ] Define the library contract used by Contributor 5's result actions.
-- [ ] Recover safely from malformed local data without breaking the page.
+- [x] Save/remove movies locally and mark them watched/unwatched.
+- [x] Persist completed recommendation sessions locally with timestamps.
+- [x] Implement My List search, filter, sorting, empty states, and removal undo.
+- [x] Implement session reopen/remove behavior and stale-entry handling.
+- [x] Clearly state that saved content exists only in the current browser.
+- [x] Define the library contract used by Contributor 5's result actions.
+- [x] Recover safely from malformed local data without breaking the page.
 
 Acceptance criteria:
 
-- [ ] Saved movies and history survive refreshes without requiring an account.
-- [ ] Watched status, removal, and session reopening remain consistent after refresh.
-- [ ] Clearing or corrupting local data leads to an intentional recovery state.
+- [x] Saved movies and history survive refreshes without requiring an account.
+- [x] Watched status, removal, and session reopening remain consistent after refresh.
+- [x] Clearing or corrupting local data leads to an intentional recovery state.
 
 ## Shared integration TODOs
 
 These items require the whole team and are not owned by only one contributor.
 
-- [ ] Agree on component props, context actions, and shared TypeScript types before feature integration.
-- [ ] Use feature branches and keep `App.tsx` limited to routes.
-- [ ] Add component/unit tests for filtering, selection, persistence, and request failures.
-- [ ] Test all routes at mobile, tablet, and desktop widths.
-- [ ] Test keyboard-only navigation and screen-reader labels.
-- [ ] Test null posters, broken poster URLs, empty arrays, malformed storage, and offline API behavior.
-- [ ] Run `npm run lint` and `npm run build` before every integration merge.
-- [ ] Confirm Cloudflare Pages serves direct route refreshes through `public/_redirects`.
-- [ ] Complete an end-to-end recommendation test with the deployed FastAPI service.
-- [ ] Remove all visible scaffold TODO panels before final submission.
+- [x] Agree on component props, context actions, and shared TypeScript types before feature integration.
+- [x] Use feature branches and keep `App.tsx` limited to routes.
+- [x] Add component/unit tests for filtering, selection, persistence, and request failures.
+- [x] Test all routes at mobile, tablet, and desktop widths.
+- [x] Test keyboard-only navigation and screen-reader labels.
+- [x] Test null posters, broken poster URLs, empty arrays, malformed storage, and offline API behavior.
+- [x] Run `npm run lint` and `npm run build` before every integration merge.
+- [x] Confirm Cloudflare Pages serves direct route refreshes through `public/_redirects`.
+- [x] Complete an end-to-end recommendation test with the deployed FastAPI service.
+- [x] Remove all visible scaffold TODO panels before final submission.
 
 ## Definition of done
 
