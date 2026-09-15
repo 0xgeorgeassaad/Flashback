@@ -3,11 +3,16 @@ import React, { createContext, useContext, useState, useMemo } from 'react';
 import type { Movie, SelectedMoviePayload } from '../types';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { STORAGE_KEYS } from '../constants';
+import { isMovieArray } from '../lib/guards';
+
+const EMPTY_TASTE: Movie[] = [];
+const TASTE_STORAGE_OPTIONS = { validate: isMovieArray };
 interface TasteContextType {
   selectedMovies: Movie[];
   addMovie: (movie: Movie) => void;
   removeMovie: (movieId: number) => void;
   toggleMovie: (movie: Movie) => void;
+  replaceSelection: (movies: Movie[]) => void;
   clearSelection: () => void;
   lastRemovedMovie: Movie | null;
   undoRemove: () => void;
@@ -22,7 +27,8 @@ export const TasteProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Keep the persisted draft under the shared application storage key.
   const [rawSelectedMovies, setSelectedMovies] = useLocalStorage<Movie[]>(
     STORAGE_KEYS.tasteDraft,
-    []
+    EMPTY_TASTE,
+    TASTE_STORAGE_OPTIONS,
   );
 
   // Fall back safely if local storage contains an unexpected value.
@@ -58,6 +64,13 @@ export const TasteProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setSelectedMovies([]);
   };
 
+  const replaceSelection = (movies: Movie[]) => {
+    const uniqueMovies = movies.filter(
+      (movie, index) => movies.findIndex((candidate) => candidate.movieId === movie.movieId) === index,
+    );
+    setSelectedMovies(uniqueMovies);
+  };
+
   const undoRemove = () => {
     if (lastRemovedMovie) {
       addMovie(lastRemovedMovie);
@@ -91,6 +104,7 @@ export const TasteProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         addMovie,
         removeMovie,
         toggleMovie,
+        replaceSelection,
         clearSelection,
         lastRemovedMovie,
         undoRemove,

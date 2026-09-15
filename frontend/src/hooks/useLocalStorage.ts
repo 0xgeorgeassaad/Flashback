@@ -1,53 +1,123 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from 'react'
 
-function safeParse<T>(raw: string | null, fallback: T): T {
-  if (raw == null) return fallback
+type LocalStorageOptions<T> = {
+  validate?: (value: unknown) => value is T
+  legacyKeys?: readonly string[]
+}
 
+type StoredState<T> = {
+  value: T
+  recovered: boolean
+}
+
+function parseStoredValue<T>(
+  raw: string,
+  validate?: (value: unknown) => value is T,
+): T | undefined {
   try {
-    return JSON.parse(raw) as T
+    const parsed: unknown = JSON.parse(raw)
+    if (validate) return validate(parsed) ? parsed : undefined
+    return parsed as T
   } catch {
-    return fallback
+    return undefined
   }
 }
 
-export function useLocalStorage<T>(key: string, initialValue: T) {
-  const [value, setValue] = useState<T>(() => {
-    if (typeof window === 'undefined') return initialValue
+function readStoredValue<T>(
+  key: string,
+  initialValue: T,
+  options: LocalStorageOptions<T>,
+): StoredState<T> {
+  if (typeof window === 'undefined') return { value: initialValue, recovered: false }
 
-    return safeParse<T>(
-      window.localStorage.getItem(key),
-      initialValue,
-    )
-  })
+  let recovered = false
+
+  for (const candidateKey of [key, ...(options.legacyKeys ?? [])]) {
+    const raw = window.localStorage.getItem(candidateKey)
+    if (raw === null) continue
+
+    const parsed = parseStoredValue(raw, options.validate)
+    if (parsed !== undefined) return { value: parsed, recovered }
+
+    recovered = true
+  }
+
+  return { value: initialValue, recovered }
+}
+
+export function useLocalStorage<T>(
+  key: string,
+  initialValue: T,
+  options: LocalStorageOptions<T> = {},
+) {
+  const [stored, setStored] = useState<StoredState<T>>(() =>
+    readStoredValue(key, initialValue, options),
+  )
+
+  const setValue: Dispatch<SetStateAction<T>> = useCallback((nextValue) => {
+    setStored((current) => {
+      const value =
+        typeof nextValue === 'function'
+          ? (nextValue as (previous: T) => T)(current.value)
+          : nextValue
+
+      return Object.is(value, current.value)
+        ? current
+        : { value, recovered: current.recovered }
+    })
+  }, [])
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(key, JSON.stringify(value))
+      window.localStorage.setItem(key, JSON.stringify(stored.value))
+      for (const legacyKey of options.legacyKeys ?? []) {
+        window.localStorage.removeItem(legacyKey)
+      }
     } catch {
-      // Ignore localStorage write failures.
+      // The application remains usable when browser storage is unavailable.
     }
-  }, [key, value])
+  }, [key, options.legacyKeys, stored.value])
 
   useEffect(() => {
     function handleStorage(event: StorageEvent) {
+      if (event.storageArea !== window.localStorage) return
+
+      if (event.key === null) {
+        setStored({ value: initialValue, recovered: false })
+        return
+      }
+
       if (event.key !== key) return
 
-      setValue(safeParse<T>(event.newValue, initialValue))
+      if (event.newValue === null) {
+        setStored({ value: initialValue, recovered: false })
+        return
+      }
+
+      const parsed = parseStoredValue(event.newValue, options.validate)
+      setStored(
+        parsed === undefined
+          ? { value: initialValue, recovered: true }
+          : { value: parsed, recovered: false },
+      )
     }
 
     window.addEventListener('storage', handleStorage)
+    return () => window.removeEventListener('storage', handleStorage)
+  }, [initialValue, key, options.validate])
 
-    return () => {
-      window.removeEventListener('storage', handleStorage)
-    }
+  const reset = useCallback(() => {
+    setStored({ value: initialValue, recovered: false })
+  }, [initialValue])
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key])
+  const dismissRecovery = useCallback(() => {
+    setStored((current) => ({ ...current, recovered: false }))
+  }, [])
 
-  const reset = useCallback(
-    () => setValue(initialValue),
-    [initialValue],
-  )
-
-  return [value, setValue, reset] as const
-} 
+  return [
+    stored.value,
+    setValue,
+    reset,
+    { recovered: stored.recovered, dismissRecovery },
+  ] as const
+}
