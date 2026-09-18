@@ -10,7 +10,7 @@ type LibraryToolbarProps = {
   onSortChange: (value: LibrarySort) => void
   visibleCount: number
   totalSaved: number
-  hasLocalData: boolean
+  hasData: boolean
   onClearData: () => void
 }
 
@@ -34,7 +34,7 @@ export function LibraryToolbar({
   onSortChange,
   visibleCount,
   totalSaved,
-  hasLocalData,
+  hasData,
   onClearData,
 }: LibraryToolbarProps) {
   return (
@@ -95,8 +95,8 @@ export function LibraryToolbar({
         <p className="font-utility text-xs uppercase tracking-[0.12em] text-haze">
           Showing {visibleCount} of {totalSaved} saved {totalSaved === 1 ? 'movie' : 'movies'}
         </p>
-        <Button type="button" variant="danger" size="sm" onClick={onClearData} disabled={!hasLocalData}>
-          Clear local data
+        <Button type="button" variant="danger" size="sm" onClick={onClearData} disabled={!hasData}>
+          Clear saved data
         </Button>
       </div>
     </div>

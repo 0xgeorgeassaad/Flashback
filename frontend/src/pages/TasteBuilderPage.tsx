@@ -12,6 +12,8 @@ export const TasteBuilderPage: React.FC = () => {
     lastRemovedMovie,
     undoRemove,
     isValidSelection,
+    loading,
+    error,
   } = useTaste();
 
   const navigate = useNavigate();
@@ -58,13 +60,25 @@ export const TasteBuilderPage: React.FC = () => {
           </div>
         )}
 
+        {loading && (
+          <div role="status" className="rounded-lg border border-slate-800 bg-slate-900 p-4 text-sm text-slate-400">
+            Loading your saved taste reel...
+          </div>
+        )}
+
+        {error && (
+          <div role="alert" className="rounded-lg border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-200">
+            {error}
+          </div>
+        )}
+
         <SelectionProgress />
         <SelectedMovieList />
         <TasteSummary />
 
         <div className="flex justify-end pt-4">
           <button
-            disabled={!isValidSelection}
+            disabled={!isValidSelection || loading}
             onClick={() => navigate('/results')}
             className={`px-8 py-3.5 rounded-xl font-bold text-base transition-all ${
               isValidSelection

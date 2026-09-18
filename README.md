@@ -13,33 +13,41 @@ Website URL: [https://flashback-b8q.pages.dev/](https://flashback-b8q.pages.dev/
 - FastAPI backend: [https://flashback.fastapicloud.dev/](https://flashback.fastapicloud.dev/)
 - API documentation: [https://flashback.fastapicloud.dev/docs](https://flashback.fastapicloud.dev/docs)
 
-Flashback is an anonymous movie-recommendation experience. A user discovers movies, builds a taste reel from at least five favorites, receives five recommendations from a ready ALS model, and may save interesting results locally in the browser.
+Flashback is an account-based movie recommendation experience. A user creates an account, discovers movies, builds a taste reel from at least five favorites, receives five recommendations from a ready ALS model, and can revisit saved movies and recommendation history from any device.
 
-The backend and model are ready and are not part of the project work. The six contributors own the complete React frontend: architecture, components, state, API integration, responsive Tailwind styling, accessibility, and frontend testing.
+The recommendation model is already trained. The React frontend and FastAPI backend now use Supabase for authentication and account-scoped persistence.
 
 ## Project boundaries
 
 ```text
 Project/
-├── frontend/     Contributor-owned React application → Cloudflare Pages
-├── backend/      Ready FastAPI service, outside the project scope
-└── model/        Ready ALS model and artifacts, outside the project scope
+├── frontend/     React application deployed to Cloudflare Pages
+├── backend/      FastAPI application deployed to FastAPI Cloud
+├── model/        Ready ALS model and training artifacts
+└── supabase/     SQL schema and row-level security policies
 ```
 
 The provided backend contract is:
 
 | Endpoint | Purpose |
 |---|---|
-| `GET /health` | Report service availability |
-| `GET /movies` | Return the movie catalog and poster metadata |
-| `GET /movies/search` | Optional server-side title search |
-| `POST /recommend` | Accept selected movies and return five recommendations |
+| `GET /health` | Report service availability, public |
+| `GET /movies` | Return the movie catalog and poster metadata, authenticated |
+| `GET /movies/search` | Search catalog titles, authenticated |
+| `POST /recommend` | Accept selected movies and return five recommendations, authenticated |
+| `GET/PUT /me/selections` | Load or replace the signed-in user's taste reel |
+| `GET/POST/PATCH/DELETE /me/saved-movies` | Manage the signed-in user's saved movies |
+| `GET/POST/DELETE /me/recommendation-sessions` | Manage recommendation history |
+| `DELETE /me/library` | Clear saved movies and recommendation history |
 
-The frontend should not require authentication, a database, model training, or direct TMDB API calls. Saved movies, drafts, and recommendation history must use `localStorage`.
+Supabase Auth creates and refreshes the browser session. The frontend sends the Supabase access token to FastAPI on every application request. FastAPI verifies the token and uses it for Supabase Data API requests, where row-level security limits every user to their own records. The frontend never receives a secret or service-role key. Direct TMDB API requests are still unnecessary because poster paths are already included in the catalog.
 
 ## User journey and routes
 
 ```text
+Sign in /auth
+   |
+   v
 Welcome /
    |
    v
@@ -57,16 +65,17 @@ Results /results --------> My List /my-list
 
 | Route | Primary job | Owner |
 |---|---|---|
+| `/auth` | Create an account or sign in | Shared integration |
 | `/` | Explain the product and start/resume a taste reel | Contributor 1 |
 | `/discover` | Search, filter, sort, and browse the catalog | Contributors 2 and 3 |
 | `/movies/:movieId` | Inspect one movie and manage its selected state | Contributor 3 |
 | `/taste` | Review selections and request recommendations | Contributor 4 |
 | `/results` | Present and explain the five results | Contributor 5 |
-| `/my-list` | Manage saved movies and local recommendation history | Contributor 6 |
+| `/my-list` | Manage saved movies and account recommendation history | Contributor 6 |
 
 ## Run the frontend
 
-Node.js 20 or newer is required.
+Node.js 22 or newer is required.
 
 ```bash
 cd frontend
@@ -90,9 +99,25 @@ The frontend uses the deployed FastAPI service by default:
 
 ```env
 VITE_API_URL=https://flashback.fastapicloud.dev
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=your_publishable_key
 ```
 
-The variable is optional because the deployed URL is also the API client's fallback. Set it to `http://localhost:8000` only when running the backend locally. Poster images are built from `posterPath` by `src/lib/posters.ts`; no TMDB API key is required.
+`VITE_API_URL` is optional because the deployed URL is also the API client's fallback. The two Supabase variables are required. Set `VITE_API_URL` to `http://localhost:8000` only when running the backend locally. Poster images are built from `posterPath` by `src/lib/posters.ts`; no TMDB API key is required.
+
+### One-time Supabase setup
+
+1. Create a Supabase project.
+2. Open **SQL Editor**, paste `supabase/schema.sql`, and run it once. This creates the account tables and row-level security policies.
+3. In **Authentication > Providers**, keep Email enabled.
+4. In **Authentication > URL Configuration**, set the production Site URL to `https://flashback-b8q.pages.dev` and add `http://localhost:5173/**` plus `https://flashback-b8q.pages.dev/**` as allowed redirect URLs.
+5. Open the project's **Connect** dialog or API settings and copy only the Project URL and Publishable key. Never use the Secret key or legacy `service_role` key in this application.
+6. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` to both the Cloudflare Pages production and preview environments.
+7. Add the same URL and publishable key to FastAPI Cloud as `FLASHBACK_SUPABASE_URL` and `FLASHBACK_SUPABASE_PUBLISHABLE_KEY`.
+
+For Cloudflare preview deployments, configure `FLASHBACK_CORS_ORIGIN_REGEX` in FastAPI Cloud as `^https://([a-z0-9-]+\.)?flashback-b8q\.pages\.dev$`. Keep the exact production URL and `http://localhost:5173` in `FLASHBACK_CORS_ORIGINS`.
+
+Local `.env` files are ignored by Git. The publishable key is intentionally safe to expose in frontend code; security comes from the user's access token and the database row-level security policies.
 
 ### Test the website with the deployed backend
 
@@ -103,7 +128,7 @@ cd frontend
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173). A successful connection changes the footer from `Catalog: loading` to `13680 titles in this catalog`. This verifies the frontend build, live API URL, browser CORS permission, JSON response shape, catalog provider, and rendered React state.
+Open [http://localhost:5173](http://localhost:5173), create an account or sign in, and load Discover. A successful connection changes the footer from `Catalog loading` to `13,680 titles in this catalog`. This verifies authentication, the live API URL, browser CORS permission, JSON response shape, catalog provider, and rendered React state.
 
 The recommendation endpoint can also be tested independently through `/docs`, Postman, or `curl` when verifying the backend contract.
 
@@ -282,8 +307,11 @@ frontend/src/
 ├── main.tsx                        Router and global providers
 ├── index.css                       Tailwind import and design tokens
 ├── api/
-│   └── client.ts                   Catalog and recommendation requests
+│   └── client.ts                   Authenticated application requests
 ├── components/
+│   ├── auth/
+│   │   ├── AuthenticatedProviders.tsx
+│   │   └── RequireAuth.tsx
 │   ├── home/
 │   │   └── HowItWorks.tsx
 │   ├── layout/
@@ -325,12 +353,12 @@ frontend/src/
 │       │   ├── RecommendationHistory.tsx
 │       │   └── SavedMovies.tsx
 │       └── useLibrary.ts
-├── hooks/
-│   └── useLocalStorage.ts
 ├── lib/
 │   ├── guards.ts
-│   └── posters.ts
+│   ├── posters.ts
+│   └── supabase.ts
 ├── pages/
+│   ├── AuthPage.tsx
 │   ├── DiscoverPage.tsx
 │   ├── HomePage.tsx
 │   ├── MovieDetailsPage.tsx
@@ -339,6 +367,7 @@ frontend/src/
 │   ├── ResultsPage.tsx
 │   └── TasteBuilderPage.tsx
 └── state/
+    ├── AuthContext.tsx
     ├── CatalogContext.tsx
     └── TasteContext.tsx
 ```
@@ -440,11 +469,11 @@ Acceptance criteria:
 
 ### Contributor 4: Taste Builder and selection state
 
-Owned areas: `TasteContext`, `useLocalStorage` for draft selection, all `features/taste` components, and `TasteBuilderPage`.
+Owned areas: `TasteContext`, all `features/taste` components, and `TasteBuilderPage`.
 
 - [x] Implement add/remove/toggle selection without duplicates.
-- [x] Hydrate and persist the current selection using `STORAGE_KEYS.tasteDraft`.
-- [x] Recover safely from malformed or stale local data.
+- [x] Hydrate and persist the current selection through the authenticated FastAPI account API.
+- [x] Report synchronization failures without discarding the current in-memory selection.
 - [x] Complete the film-strip selection tray and mobile collapsed state.
 - [x] Implement selected poster thumbnails and individual remove actions.
 - [x] Build the progress display for the five-movie minimum.
@@ -481,23 +510,23 @@ Acceptance criteria:
 - [x] Failed requests are retryable and do not erase the taste reel.
 - [x] Results pass saved movies and completed sessions through the agreed library contract.
 
-### Contributor 6: Saved movies and local history
+### Contributor 6: Saved movies and recommendation history
 
-Owned areas: `useLocalStorage` for library data, `features/library`, and `MyListPage`.
+Owned areas: `features/library` and `MyListPage`.
 
-- [x] Save/remove movies locally and mark them watched/unwatched.
-- [x] Persist completed recommendation sessions locally with timestamps.
+- [x] Save/remove account movies and mark them watched/unwatched.
+- [x] Persist completed recommendation sessions to the account with timestamps.
 - [x] Implement My List search, filter, sorting, empty states, and removal undo.
 - [x] Implement session reopen/remove behavior and stale-entry handling.
-- [x] Clearly state that saved content exists only in the current browser.
+- [x] Clearly state that saved content synchronizes across signed-in devices.
 - [x] Define the library contract used by Contributor 5's result actions.
-- [x] Recover safely from malformed local data without breaking the page.
+- [x] Show loading, failure, retry, and optimistic update states for account data.
 
 Acceptance criteria:
 
-- [x] Saved movies and history survive refreshes without requiring an account.
+- [x] Saved movies and history survive refreshes and follow the signed-in account.
 - [x] Watched status, removal, and session reopening remain consistent after refresh.
-- [x] Clearing or corrupting local data leads to an intentional recovery state.
+- [x] Failed account updates roll back or show an intentional recovery state.
 
 ## Shared integration TODOs
 
@@ -505,10 +534,10 @@ These items require the whole team and are not owned by only one contributor.
 
 - [x] Agree on component props, context actions, and shared TypeScript types before feature integration.
 - [x] Use feature branches and keep `App.tsx` limited to routes.
-- [x] Add component/unit tests for filtering, selection, persistence, and request failures.
+- [x] Add component/unit tests for filtering, selection, account persistence, and request failures.
 - [x] Test all routes at mobile, tablet, and desktop widths.
 - [x] Test keyboard-only navigation and screen-reader labels.
-- [x] Test null posters, broken poster URLs, empty arrays, malformed storage, and offline API behavior.
+- [x] Test null posters, broken poster URLs, empty arrays, account synchronization, and offline API behavior.
 - [x] Run `npm run lint` and `npm run build` before every integration merge.
 - [x] Confirm Cloudflare Pages serves direct route refreshes through `public/_redirects`.
 - [x] Complete an end-to-end recommendation test with the deployed FastAPI service.
@@ -516,23 +545,23 @@ These items require the whole team and are not owned by only one contributor.
 
 ## Definition of done
 
-The project is complete when an anonymous user can:
+The project is complete when an authenticated user can:
 
 1. Understand the product on the Welcome page.
 2. Search, filter, sort, and paginate the supplied movie catalog.
 3. Open a movie detail URL and add or remove that movie.
-4. Select at least five unique movies and retain that draft after refresh.
+4. Select at least five unique movies and retain that draft across signed-in devices.
 5. Review their taste reel and request recommendations.
 6. See a resilient loading state followed by five recommendation results.
 7. Understand factual genre overlap without misleading model explanations.
-8. Save movies, mark them watched, and revisit local recommendation sessions.
+8. Save movies, mark them watched, and revisit account recommendation sessions.
 9. Complete the entire journey on mobile and with keyboard navigation.
 10. Use the deployed Cloudflare Pages frontend with the supplied FastAPI backend.
 
 ## Explicitly out of scope
 
-- Authentication, accounts, passwords, or server-side user profiles
-- A frontend-owned database
+- Custom password storage or a custom token issuer
+- Direct browser access to application database tables
 - Social feeds, comments, or public reviews
 - Payments or subscriptions
 - An administration dashboard

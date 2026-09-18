@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useTaste } from '../../state/TasteContext'
+import { useAuth } from '../../state/AuthContext'
+import { Button } from '../ui/Button'
 import { IconButton } from '../ui/IconButton'
 
 const links = [
@@ -23,6 +25,7 @@ function MenuIcon({ open }: { open: boolean }) {
 
 export function Navbar() {
   const { selectedMovies } = useTaste()
+  const auth = useAuth()
   const [mobileOpen, setMobileOpen] = useState(false)
 
   useEffect(() => {
@@ -69,6 +72,18 @@ export function Navbar() {
           >
             Start discovering
           </NavLink>
+          <span className="hidden max-w-44 truncate text-xs text-haze lg:inline" title={auth.user?.email ?? undefined}>
+            {auth.user?.email}
+          </span>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            className="hidden md:inline-flex"
+            onClick={() => void auth.signOut()}
+          >
+            Sign out
+          </Button>
           <IconButton
             label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
             onClick={() => setMobileOpen((value) => !value)}
@@ -110,6 +125,9 @@ export function Navbar() {
           >
             Start discovering
           </NavLink>
+          <Button type="button" variant="ghost" className="mt-1 w-full" onClick={() => void auth.signOut()}>
+            Sign out
+          </Button>
         </div>
       </div>
     </header>

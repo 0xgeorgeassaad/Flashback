@@ -35,7 +35,7 @@ export function MyListPage() {
     library.setFilter('all')
   }
 
-  function clearLocalData() {
+  function clearSavedData() {
     library.clearLibrary()
     setClearDialogOpen(false)
   }
@@ -52,27 +52,33 @@ export function MyListPage() {
     nextTabRef.current?.focus()
   }
 
-  const hasLocalData = library.totalSaved > 0 || library.history.length > 0
+  const hasData = library.totalSaved > 0 || library.history.length > 0
 
   return (
     <div className="space-y-8">
       <PageIntro
-        eyebrow="Saved in this browser"
+        eyebrow="Synced to your account"
         title="Keep the ones worth remembering."
-        description="Saved movies and recommendation reels live only in this browser. No account or database is involved."
+        description="Saved movies and recommendation reels follow your account, so you can return to them from any device."
       />
 
       <Toast
-        open={library.recoveredStorage}
+        open={library.error !== null}
         tone="error"
-        title="Saved data needed recovery"
-        description="Your library is usable again. Data that did not match the expected format was reset while any readable local data was kept."
+        title="Your library could not be synchronized"
+        description={library.error ?? ''}
         action={
-          <Button type="button" size="sm" variant="secondary" onClick={library.dismissRecoveryNotice}>
-            Dismiss
+          <Button type="button" size="sm" variant="secondary" onClick={library.reload}>
+            Try again
           </Button>
         }
       />
+
+      {library.loading ? (
+        <div role="status" className="rounded-panel border border-line bg-reel/45 p-8 text-center text-sm text-haze">
+          Loading your saved movies and recommendation history...
+        </div>
+      ) : null}
 
       <div role="tablist" aria-label="My List sections" className="flex gap-2 border-b border-line">
         <button
@@ -120,7 +126,7 @@ export function MyListPage() {
             onSortChange={library.setSort}
             visibleCount={library.savedMovies.length}
             totalSaved={library.totalSaved}
-            hasLocalData={hasLocalData}
+            hasData={hasData}
             onClearData={() => setClearDialogOpen(true)}
           />
           <SavedMovies
@@ -148,15 +154,15 @@ export function MyListPage() {
       <Dialog
         open={clearDialogOpen}
         onClose={() => setClearDialogOpen(false)}
-        title="Clear saved browser data?"
-        description="This removes every saved movie and recommendation reel from this browser. Your current taste reel is not affected."
+        title="Clear saved account data?"
+        description="This removes every saved movie and recommendation reel from your account on every device. Your current taste reel is not affected."
       >
         <div className="flex flex-wrap justify-end gap-3">
           <Button type="button" variant="secondary" onClick={() => setClearDialogOpen(false)}>
             Keep my data
           </Button>
-          <Button type="button" variant="danger" onClick={clearLocalData}>
-            Clear local data
+          <Button type="button" variant="danger" onClick={clearSavedData}>
+            Clear saved data
           </Button>
         </div>
       </Dialog>
