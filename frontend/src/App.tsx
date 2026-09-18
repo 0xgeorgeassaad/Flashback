@@ -5,6 +5,7 @@ import { RequireAuth } from './components/auth/RequireAuth'
 import { AuthPage } from './pages/AuthPage'
 import { DiscoverPage } from './pages/DiscoverPage'
 import { HomePage } from './pages/HomePage'
+import { LandingPage } from './pages/LandingPage'
 import { MovieDetailsPage } from './pages/MovieDetailsPage'
 import { MyListPage } from './pages/MyListPage'
 import { NotFoundPage } from './pages/NotFoundPage'
@@ -14,11 +15,12 @@ import { TasteBuilderPage } from './pages/TasteBuilderPage'
 export default function App() {
   return (
     <Routes>
+      <Route index element={<LandingPage />} />
       <Route path="auth" element={<AuthPage />} />
       <Route element={<RequireAuth />}>
         <Route element={<AuthenticatedProviders />}>
           <Route element={<AppShell />}>
-            <Route index element={<HomePage />} />
+            <Route path="home" element={<HomePage />} />
             <Route path="discover" element={<DiscoverPage />} />
             <Route path="taste" element={<TasteBuilderPage />} />
             <Route path="results" element={<ResultsPage />} />
