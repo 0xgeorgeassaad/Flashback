@@ -19,7 +19,7 @@ export function NotFoundPage() {
             Browse movies
           </Link>
           <Link
-            to="/"
+            to="/home"
             className="inline-flex min-h-11 items-center justify-center rounded-full border border-line bg-reel px-5 text-sm font-semibold text-screen transition-colors hover:border-haze"
           >
             Back to Flashback

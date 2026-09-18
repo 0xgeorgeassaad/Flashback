@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
+import { Link, Navigate, useLocation, useSearchParams } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { useAuth } from '../state/AuthContext'
 
@@ -8,7 +8,10 @@ type AuthMode = 'sign-in' | 'sign-up'
 export function AuthPage() {
   const auth = useAuth()
   const location = useLocation()
-  const [mode, setMode] = useState<AuthMode>('sign-in')
+  const [searchParams] = useSearchParams()
+  const [mode, setMode] = useState<AuthMode>(() =>
+    searchParams.get('mode') === 'sign-up' ? 'sign-up' : 'sign-in',
+  )
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -21,7 +24,7 @@ export function AuthPage() {
     'from' in location.state &&
     typeof location.state.from === 'string'
       ? location.state.from
-      : '/'
+      : '/discover'
 
   if (auth.status === 'authenticated') return <Navigate to={destination} replace />
 
@@ -58,9 +61,9 @@ export function AuthPage() {
   return (
     <main className="archive-grid grid min-h-svh place-items-center px-5 py-10">
       <section className="w-full max-w-md rounded-panel border border-line bg-booth/95 p-6 shadow-panel sm:p-8">
-        <a href="/" className="font-display text-2xl tracking-tight text-marquee">
+        <Link to="/" className="font-display text-2xl tracking-tight text-marquee">
           Flashback
-        </a>
+        </Link>
         <p className="mt-2 text-sm leading-6 text-haze">
           Sign in to keep your taste reel, saved movies, and recommendation history available on every device.
         </p>

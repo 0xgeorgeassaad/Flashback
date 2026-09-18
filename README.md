@@ -45,10 +45,13 @@ Supabase Auth creates and refreshes the browser session. The frontend sends the 
 ## User journey and routes
 
 ```text
+Landing /
+   |
+   v
 Sign in /auth
    |
    v
-Welcome /
+Welcome /home
    |
    v
 Discover /discover -----> Movie details /movies/:movieId
@@ -65,8 +68,9 @@ Results /results --------> My List /my-list
 
 | Route | Primary job | Owner |
 |---|---|---|
+| `/` | Public introduction with sign-up and sign-in actions | Shared integration |
 | `/auth` | Create an account or sign in | Shared integration |
-| `/` | Explain the product and start/resume a taste reel | Contributor 1 |
+| `/home` | Explain the signed-in experience and start/resume a taste reel | Contributor 1 |
 | `/discover` | Search, filter, sort, and browse the catalog | Contributors 2 and 3 |
 | `/movies/:movieId` | Inspect one movie and manage its selected state | Contributor 3 |
 | `/taste` | Review selections and request recommendations | Contributor 4 |
