@@ -36,3 +36,13 @@ def test_cors_allows_configured_frontend() -> None:
 
     assert response.status_code == 200
     assert response.headers["access-control-allow-origin"] == "https://frontend.example"
+
+
+def test_application_endpoints_require_authentication() -> None:
+    application = create_app(Settings(environment="test"))
+
+    with TestClient(application) as client:
+        response = client.get("/movies")
+
+    assert response.status_code == 401
+    assert response.headers["www-authenticate"] == "Bearer"

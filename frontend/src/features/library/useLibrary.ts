@@ -1,112 +1,180 @@
-import { useCallback, useMemo, useState } from 'react'
-import { STORAGE_KEYS } from '../../constants'
-import { useLocalStorage } from '../../hooks/useLocalStorage'
-import { isRecommendationSessionArray, isSavedMovieArray } from '../../lib/guards'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  clearAccountLibrary,
+  createRecommendationSession,
+  createSavedMovie,
+  deleteRecommendationSession,
+  deleteSavedMovie,
+  fetchRecommendationSessions,
+  fetchSavedMovies,
+  setSavedMovieWatched,
+} from '../../api/client'
 import type { Movie, RecommendationSession, SavedMovie } from '../../types'
-
-const EMPTY_SAVED_MOVIES: SavedMovie[] = []
-const EMPTY_HISTORY: RecommendationSession[] = []
-
-const SAVED_MOVIE_OPTIONS = {
-  validate: isSavedMovieArray,
-  legacyKeys: ['flashback:library'],
-} as const
-
-const HISTORY_OPTIONS = {
-  validate: isRecommendationSessionArray,
-  legacyKeys: ['flashback:history'],
-} as const
 
 export type LibraryFilter = 'all' | 'watched' | 'unwatched'
 export type LibrarySort = 'recent' | 'title'
 
 export function useLibraryState() {
-  const [savedMovies, setSavedMovies, resetSavedMovies, savedMeta] = useLocalStorage(
-    STORAGE_KEYS.savedMovies,
-    EMPTY_SAVED_MOVIES,
-    SAVED_MOVIE_OPTIONS,
-  )
-  const [history, setHistory, resetHistory, historyMeta] = useLocalStorage(
-    STORAGE_KEYS.recommendationHistory,
-    EMPTY_HISTORY,
-    HISTORY_OPTIONS,
-  )
+  const [savedMovies, setSavedMovies] = useState<SavedMovie[]>([])
+  const [history, setHistory] = useState<RecommendationSession[]>([])
+  const savedRef = useRef<SavedMovie[]>([])
+  const historyRef = useRef<RecommendationSession[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [loadVersion, setLoadVersion] = useState(0)
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<LibraryFilter>('all')
   const [sort, setSort] = useState<LibrarySort>('recent')
+
+  const applySavedMovies = useCallback((movies: SavedMovie[]) => {
+    savedRef.current = movies
+    setSavedMovies(movies)
+  }, [])
+
+  const applyHistory = useCallback((sessions: RecommendationSession[]) => {
+    historyRef.current = sessions
+    setHistory(sessions)
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    void Promise.all([fetchSavedMovies(), fetchRecommendationSessions()])
+      .then(([movies, sessions]) => {
+        if (!active) return
+        applySavedMovies(movies)
+        applyHistory(sessions)
+      })
+      .catch((loadError) => {
+        if (!active) return
+        setError(loadError instanceof Error ? loadError.message : 'Your library could not be loaded.')
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [applyHistory, applySavedMovies, loadVersion])
+
+  const reportError = useCallback((operationError: unknown, fallback: string) => {
+    setError(operationError instanceof Error ? operationError.message : fallback)
+  }, [])
 
   const isSaved = useCallback(
     (movieId: number) => savedMovies.some((movie) => movie.movieId === movieId),
     [savedMovies],
   )
 
-  const saveMovie = useCallback(
-    (movie: Movie) => {
-      setSavedMovies((current) => {
-        if (current.some((item) => item.movieId === movie.movieId)) return current
-
-        return [
-          { ...movie, watched: false, savedAt: new Date().toISOString() },
-          ...current,
-        ]
+  const saveMovie = useCallback((movie: Movie) => {
+    if (savedRef.current.some((item) => item.movieId === movie.movieId)) return
+    const optimistic: SavedMovie = {
+      ...movie,
+      watched: false,
+      savedAt: new Date().toISOString(),
+    }
+    applySavedMovies([optimistic, ...savedRef.current])
+    setError(null)
+    void createSavedMovie(movie.movieId)
+      .then((saved) => {
+        applySavedMovies(
+          savedRef.current.map((item) => (item.movieId === saved.movieId ? saved : item)),
+        )
       })
-    },
-    [setSavedMovies],
-  )
+      .catch((saveError) => {
+        applySavedMovies(savedRef.current.filter((item) => item.movieId !== movie.movieId))
+        reportError(saveError, 'The movie could not be saved.')
+      })
+  }, [applySavedMovies, reportError])
 
-  const removeMovie = useCallback(
-    (movieId: number) => {
-      const removed = savedMovies.find((movie) => movie.movieId === movieId)
-      setSavedMovies((current) => current.filter((movie) => movie.movieId !== movieId))
-      return removed
-    },
-    [savedMovies, setSavedMovies],
-  )
+  const removeMovie = useCallback((movieId: number) => {
+    const removed = savedRef.current.find((movie) => movie.movieId === movieId)
+    if (!removed) return undefined
+    applySavedMovies(savedRef.current.filter((movie) => movie.movieId !== movieId))
+    setError(null)
+    void deleteSavedMovie(movieId).catch((removeError) => {
+      applySavedMovies([removed, ...savedRef.current])
+      reportError(removeError, 'The movie could not be removed.')
+    })
+    return removed
+  }, [applySavedMovies, reportError])
 
-  const restoreMovie = useCallback(
-    (movie: SavedMovie) => {
-      setSavedMovies((current) =>
-        current.some((item) => item.movieId === movie.movieId) ? current : [movie, ...current],
+  const restoreMovie = useCallback((movie: SavedMovie) => {
+    if (savedRef.current.some((item) => item.movieId === movie.movieId)) return
+    applySavedMovies([movie, ...savedRef.current])
+    setError(null)
+    void createSavedMovie(movie.movieId)
+      .then((saved) =>
+        movie.watched ? setSavedMovieWatched(saved.movieId, true) : Promise.resolve(saved),
       )
-    },
-    [setSavedMovies],
-  )
+      .then((saved) => {
+        applySavedMovies(
+          savedRef.current.map((item) => (item.movieId === saved.movieId ? saved : item)),
+        )
+      })
+      .catch((restoreError) => {
+        applySavedMovies(savedRef.current.filter((item) => item.movieId !== movie.movieId))
+        reportError(restoreError, 'The movie could not be restored.')
+      })
+  }, [applySavedMovies, reportError])
 
-  const toggleWatched = useCallback(
-    (movieId: number) => {
-      setSavedMovies((current) =>
-        current.map((movie) =>
-          movie.movieId === movieId ? { ...movie, watched: !movie.watched } : movie,
-        ),
-      )
-    },
-    [setSavedMovies],
-  )
+  const toggleWatched = useCallback((movieId: number) => {
+    const current = savedRef.current.find((movie) => movie.movieId === movieId)
+    if (!current) return
+    const watched = !current.watched
+    applySavedMovies(
+      savedRef.current.map((movie) =>
+        movie.movieId === movieId ? { ...movie, watched } : movie,
+      ),
+    )
+    setError(null)
+    void setSavedMovieWatched(movieId, watched)
+      .then((saved) => {
+        applySavedMovies(
+          savedRef.current.map((movie) => (movie.movieId === movieId ? saved : movie)),
+        )
+      })
+      .catch((updateError) => {
+        applySavedMovies(
+          savedRef.current.map((movie) => (movie.movieId === movieId ? current : movie)),
+        )
+        reportError(updateError, 'The watched status could not be updated.')
+      })
+  }, [applySavedMovies, reportError])
 
-  const saveSession = useCallback(
-    (session: RecommendationSession) => {
-      setHistory((current) =>
-        current.some((item) => item.id === session.id) ? current : [session, ...current],
-      )
-    },
-    [setHistory],
-  )
+  const saveSession = useCallback((session: RecommendationSession) => {
+    if (historyRef.current.some((item) => item.id === session.id)) return
+    applyHistory([session, ...historyRef.current])
+    setError(null)
+    void createRecommendationSession(session)
+      .then((saved) => {
+        applyHistory(historyRef.current.map((item) => (item.id === saved.id ? saved : item)))
+      })
+      .catch((saveError) => {
+        applyHistory(historyRef.current.filter((item) => item.id !== session.id))
+        reportError(saveError, 'The recommendation reel could not be saved.')
+      })
+  }, [applyHistory, reportError])
 
-  const removeSession = useCallback(
-    (sessionId: string) => {
-      setHistory((current) => current.filter((session) => session.id !== sessionId))
-    },
-    [setHistory],
-  )
+  const removeSession = useCallback((sessionId: string) => {
+    const removed = historyRef.current.find((session) => session.id === sessionId)
+    if (!removed) return
+    applyHistory(historyRef.current.filter((session) => session.id !== sessionId))
+    setError(null)
+    void deleteRecommendationSession(sessionId).catch((removeError) => {
+      applyHistory([removed, ...historyRef.current])
+      reportError(removeError, 'The recommendation reel could not be removed.')
+    })
+  }, [applyHistory, reportError])
 
-  const restoreSession = useCallback(
-    (session: RecommendationSession) => {
-      setHistory((current) =>
-        current.some((item) => item.id === session.id) ? current : [session, ...current],
-      )
-    },
-    [setHistory],
-  )
+  const restoreSession = useCallback((session: RecommendationSession) => {
+    if (historyRef.current.some((item) => item.id === session.id)) return
+    applyHistory([session, ...historyRef.current])
+    setError(null)
+    void createRecommendationSession(session).catch((restoreError) => {
+      applyHistory(historyRef.current.filter((item) => item.id !== session.id))
+      reportError(restoreError, 'The recommendation reel could not be restored.')
+    })
+  }, [applyHistory, reportError])
 
   const findSession = useCallback(
     (sessionId: string) => history.find((session) => session.id === sessionId),
@@ -114,17 +182,26 @@ export function useLibraryState() {
   )
 
   const clearLibrary = useCallback(() => {
-    resetSavedMovies()
-    resetHistory()
+    const previousMovies = savedRef.current
+    const previousHistory = historyRef.current
+    applySavedMovies([])
+    applyHistory([])
     setQuery('')
     setFilter('all')
     setSort('recent')
-  }, [resetHistory, resetSavedMovies])
+    setError(null)
+    void clearAccountLibrary().catch((clearError) => {
+      applySavedMovies(previousMovies)
+      applyHistory(previousHistory)
+      reportError(clearError, 'Your library could not be cleared.')
+    })
+  }, [applyHistory, applySavedMovies, reportError])
 
-  const dismissRecoveryNotice = useCallback(() => {
-    savedMeta.dismissRecovery()
-    historyMeta.dismissRecovery()
-  }, [historyMeta, savedMeta])
+  const reload = useCallback(() => {
+    setLoading(true)
+    setError(null)
+    setLoadVersion((version) => version + 1)
+  }, [])
 
   const visibleMovies = useMemo(() => {
     const search = query.trim().toLocaleLowerCase()
@@ -158,8 +235,9 @@ export function useLibraryState() {
     restoreSession,
     findSession,
     clearLibrary,
-    recoveredStorage: savedMeta.recovered || historyMeta.recovered,
-    dismissRecoveryNotice,
+    loading,
+    error,
+    reload,
     query,
     setQuery,
     filter,

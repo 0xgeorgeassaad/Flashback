@@ -62,7 +62,7 @@ export function RecommendationHistory({
         <div className="archive-grid rounded-panel border border-dashed border-line bg-reel/35 p-8 text-center sm:p-12">
           <h2 className="font-display text-2xl text-screen">No recommendation reels yet.</h2>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-haze">
-            Completed recommendation sets are stored here automatically so you can reopen them later in this browser.
+            Completed recommendation sets are stored here automatically so you can reopen them whenever you sign in.
           </p>
         </div>
       ) : (

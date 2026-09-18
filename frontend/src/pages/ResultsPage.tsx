@@ -124,8 +124,8 @@ export function ResultsPage() {
     return (
       <ResultsMessage
         eyebrow="Saved reel unavailable"
-        title="This reel is no longer in this browser."
-        description="It may have been removed, cleared, or recovered after unreadable browser data. Open My List to choose another saved reel."
+        title="This reel is no longer in your history."
+        description="It may have been removed or cleared from your account. Open My List to choose another saved reel."
       >
         <Link to="/my-list" className={secondaryLinkClasses}>
           Open My List

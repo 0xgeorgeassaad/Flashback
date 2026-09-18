@@ -6,11 +6,11 @@ from pydantic import BaseModel, ConfigDict, Field
 class Movie(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    movie_id: int = Field(serialization_alias="movieId")
+    movie_id: int = Field(alias="movieId")
     title: str
     genres: tuple[str, ...]
-    tmdb_id: int | None = Field(default=None, serialization_alias="tmdbId")
-    poster_path: str | None = Field(default=None, serialization_alias="posterPath")
+    tmdb_id: int | None = Field(default=None, alias="tmdbId")
+    poster_path: str | None = Field(default=None, alias="posterPath")
 
 
 class MoviesResponse(BaseModel):

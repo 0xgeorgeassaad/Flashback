@@ -2,8 +2,19 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
+from app.api.dependencies import CurrentUser, require_user
 from app.config import Settings
 from app.main import create_app
+
+
+def authenticated_app():
+    application = create_app(Settings(environment="test"))
+    application.dependency_overrides[require_user] = lambda: CurrentUser(
+        user_id="test-user",
+        email="test@example.com",
+        access_token="test-token",
+    )
+    return application
 
 
 def selected_payload(movie_ids: list[int]) -> dict[str, list[dict[str, int]]]:
@@ -11,7 +22,7 @@ def selected_payload(movie_ids: list[int]) -> dict[str, list[dict[str, int]]]:
 
 
 def test_recommend_returns_five_enriched_unseen_movies() -> None:
-    application = create_app(Settings(environment="test"))
+    application = authenticated_app()
     selected = [1, 260, 318, 527, 1196]
 
     with TestClient(application) as client:
@@ -31,7 +42,7 @@ def test_recommend_returns_five_enriched_unseen_movies() -> None:
 
 
 def test_recommend_rejects_too_few_or_duplicate_selections() -> None:
-    application = create_app(Settings(environment="test"))
+    application = authenticated_app()
 
     with TestClient(application) as client:
         too_few = client.post("/recommend", json=selected_payload([1, 260, 318, 527]))
@@ -42,7 +53,7 @@ def test_recommend_rejects_too_few_or_duplicate_selections() -> None:
 
 
 def test_recommend_rejects_unknown_movie_id() -> None:
-    application = create_app(Settings(environment="test"))
+    application = authenticated_app()
 
     with TestClient(application) as client:
         response = client.post(
@@ -54,7 +65,7 @@ def test_recommend_rejects_unknown_movie_id() -> None:
 
 
 def test_recommend_requires_positive_rating_value() -> None:
-    application = create_app(Settings(environment="test"))
+    application = authenticated_app()
     payload = selected_payload([1, 260, 318, 527, 1196])
     payload["movies"][0]["rating"] = 4
 

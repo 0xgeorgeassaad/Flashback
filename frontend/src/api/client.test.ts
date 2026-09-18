@@ -2,6 +2,10 @@ import { describe, expect, it, vi } from 'vitest'
 import { fetchMovies, fetchRecommendations } from './client'
 import type { Movie, SelectedMoviePayload } from '../types'
 
+vi.mock('../lib/supabase', () => ({
+  getAccessToken: vi.fn().mockResolvedValue('test-access-token'),
+}))
+
 const movie: Movie = {
   movieId: 1,
   title: 'Toy Story (1995)',
@@ -24,9 +28,17 @@ function jsonResponse(payload: unknown, status = 200) {
 
 describe('API client', () => {
   it('returns a validated movie catalog', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ movies: [movie] })))
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ movies: [movie] }))
+    vi.stubGlobal('fetch', fetchMock)
 
     await expect(fetchMovies()).resolves.toEqual([movie])
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://flashback.fastapicloud.dev/movies',
+      expect.objectContaining({ headers: expect.any(Headers) }),
+    )
+    expect(fetchMock.mock.calls[0][1].headers.get('Authorization')).toBe(
+      'Bearer test-access-token',
+    )
   })
 
   it('reports catalog HTTP errors using the backend detail', async () => {

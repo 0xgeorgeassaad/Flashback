@@ -13,8 +13,11 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     environment: Literal["development", "test", "production"] = "development"
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5173"])
+    cors_origin_regex: str | None = None
     assets_dir: Path = Path(__file__).parent / "assets"
     recommendation_count: int = 5
+    supabase_url: str | None = None
+    supabase_publishable_key: str | None = None
 
     model_config = SettingsConfigDict(
         env_prefix="FLASHBACK_",

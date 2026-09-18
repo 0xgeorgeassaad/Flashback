@@ -1,6 +1,6 @@
 # Flashback API
 
-This directory contains the isolated FastAPI application that serves the Flashback frontend. It loads pre-trained recommendation artifacts and never trains the ALS model at runtime. Serving uses NumPy to fold a visitor's selected movies into the trained factor space, so the deployed API does not require the native `implicit` or SciPy runtimes.
+This directory contains the isolated FastAPI application that serves the Flashback frontend. It loads pre-trained recommendation artifacts and never trains the ALS model at runtime. Serving uses NumPy to fold a user's selected movies into the trained factor space, so the deployed API does not require the native `implicit` or SciPy runtimes. Supabase supplies authentication and the PostgreSQL-backed account data store.
 
 ## Requirements
 
@@ -34,9 +34,15 @@ uv run ruff check .
 | Endpoint | Purpose |
 |---|---|
 | `GET /health` | Report API and model readiness |
-| `GET /movies` | Return the frontend movie catalog |
+| `GET /movies` | Return the authenticated user's frontend movie catalog |
 | `GET /movies/search` | Search catalog titles on the server |
 | `POST /recommend` | Return five recommendations from selected movies |
+| `GET/PUT /me/selections` | Read or replace the user's taste selection |
+| `GET/POST/PATCH/DELETE /me/saved-movies` | Manage the user's saved movies |
+| `GET/POST/DELETE /me/recommendation-sessions` | Manage recommendation history |
+| `DELETE /me/library` | Clear the user's saved movies and history |
+
+`GET /health` is public. Every other endpoint requires `Authorization: Bearer <access-token>`. FastAPI verifies that token through Supabase Auth and passes the same token to the Supabase Data API. The SQL policies in `../supabase/schema.sql` enforce per-user ownership.
 
 `GET /movies` serves the complete 13,680-title model catalog from a validated startup cache. Responses are compressed and contain public MovieLens IDs rather than internal factor indexes. `GET /movies/search` accepts `q` and an optional `limit` from 1 to 100.
 
@@ -60,6 +66,15 @@ Example request:
 
 Configuration uses environment variables prefixed with `FLASHBACK_`. Copy `.env.example` to `.env` for local overrides. Local `.env` files and FastAPI Cloud deployment state are ignored by Git.
 
+Required authentication variables:
+
+```env
+FLASHBACK_SUPABASE_URL=https://your-project.supabase.co
+FLASHBACK_SUPABASE_PUBLISHABLE_KEY=your_publishable_key
+```
+
+Use only the public publishable key. Do not configure a secret or service-role key in this application.
+
 FastAPI Cloud should use `backend` as the monorepo application directory. The configured entrypoint is `app.main:app`.
 
 ## Deploy to FastAPI Cloud
@@ -80,9 +95,12 @@ The TMDB token is not required in FastAPI Cloud because poster-path enrichment h
 ```bash
 uv run fastapi cloud env set FLASHBACK_ENVIRONMENT production
 uv run fastapi cloud env set FLASHBACK_CORS_ORIGINS '["https://your-site.pages.dev"]'
+uv run fastapi cloud env set FLASHBACK_CORS_ORIGIN_REGEX '^https://([a-z0-9-]+\.)?your-site\.pages\.dev$'
+uv run fastapi cloud env set FLASHBACK_SUPABASE_URL 'https://your-project.supabase.co'
+uv run fastapi cloud env set FLASHBACK_SUPABASE_PUBLISHABLE_KEY 'your_publishable_key'
 ```
 
-Environment changes take effect on the next deployment. Until the production frontend URL is configured, API calls from `http://localhost:5173` remain the only browser origin allowed by default.
+Environment changes take effect on the next deployment. Configure the exact production origin and a restricted Pages preview regular expression before testing a deployed frontend.
 
 ## One-time poster metadata enrichment
 

@@ -6,6 +6,10 @@ import { CatalogProvider } from '../../../state/CatalogContext'
 import type { Movie } from '../../../types'
 import { useMovieFilters } from './useMovieFilters'
 
+vi.mock('../../../lib/supabase', () => ({
+  getAccessToken: vi.fn().mockResolvedValue('test-access-token'),
+}))
+
 const catalog: Movie[] = [
   {
     movieId: 1,

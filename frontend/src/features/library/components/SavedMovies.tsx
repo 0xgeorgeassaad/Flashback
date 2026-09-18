@@ -58,7 +58,7 @@ export function SavedMovies({
         <div className="archive-grid rounded-panel border border-dashed border-line bg-reel/35 p-8 text-center sm:p-12">
           <h2 className="font-display text-2xl text-screen">Your list is ready for its first title.</h2>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-haze">
-            Save a recommendation when a title feels worth returning to. Everything stays in this browser.
+            Save a recommendation when a title feels worth returning to. It will be available on every device where you sign in.
           </p>
           <Link
             to="/discover"

@@ -25,7 +25,7 @@ export function Footer() {
         <div>
           <p className="font-display text-lg text-screen">Flashback</p>
           <p className="mt-1 max-w-md text-xs leading-5 text-haze">
-            An anonymous movie recommender built on top of the MovieLens catalog.
+            A personalized movie recommender built on top of the MovieLens catalog.
           </p>
         </div>
         <div className="flex items-center gap-3" role="status" aria-live="polite">
